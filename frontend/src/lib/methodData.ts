@@ -31,24 +31,24 @@ export const methodsData: Record<string, MethodInfo> = {
     definition: "An incremental search method that repeatedly bisects an interval and selects a subinterval in which a root must lie for a continuous function.",
     formula: "c = \\frac{a + b}{2}",
     algorithm: [
-      "Choose a and b such that f(a) and f(b) have opposite signs (f(a) * f(b) < 0).",
-      "Calculate the midpoint c = (a + b) / 2.",
-      "Evaluate f(c).",
-      "If f(c) is close enough to 0 or interval length is below tolerance, stop.",
-      "If f(a) * f(c) < 0, set b = c. Else, set a = c.",
+      "Choose $a$ and $b$ such that $f(a)$ and $f(b)$ have opposite signs ($f(a) \\cdot f(b) < 0$).",
+      "Calculate the midpoint $c = \\frac{a + b}{2}$.",
+      "Evaluate $f(c)$.",
+      "If $f(c)$ is close enough to $0$ or interval length $|b - a|$ is below tolerance, stop.",
+      "If $f(a) \\cdot f(c) < 0$, set $b = c$. Else, set $a = c$.",
       "Repeat steps 2-5."
     ],
     conditions: [
-      "f(x) must be continuous in [a, b].",
-      "f(a) * f(b) < 0 (intermediate value theorem)."
+      "$f(x)$ must be continuous in the interval $[a, b]$.",
+      "$f(a) \\cdot f(b) < 0$ (Intermediate Value Theorem)."
     ],
     useCases: [
       "Finding single real roots of continuous functions.",
       "Initializing bounds for faster methods."
     ],
     example: {
-      problem: "Find a root of f(x) = x^3 - x - 1 in [1, 2] with tolerance 1e-4.",
-      solution: "The root converges to approximately 1.3247 after 14 iterations."
+      problem: "Find a root of $f(x) = x^3 - x - 1$ in $[1, 2]$ with tolerance $10^{-4}$.",
+      solution: "The root converges to approximately $1.3247$ after 14 iterations."
     }
   },
   "secant": {
@@ -58,50 +58,50 @@ export const methodsData: Record<string, MethodInfo> = {
     definition: "An iterative root-finding method that uses a succession of roots of secant lines to find increasingly better approximations of a root.",
     formula: "x_{n+1} = x_n - f(x_n) \\frac{x_n - x_{n-1}}{f(x_n) - f(x_{n-1})}",
     algorithm: [
-      "Choose two initial guesses x_0 and x_1.",
-      "Compute x_{n+1} using the secant formula.",
-      "Check error |x_{n+1} - x_n|.",
-      "If error < tolerance, stop and return root.",
-      "Otherwise, set x_{n-1} = x_n and x_n = x_{n+1}.",
+      "Choose two initial guesses $x_0$ and $x_1$.",
+      "Compute $x_{n+1}$ using the secant formula.",
+      "Check error $|x_{n+1} - x_n|$.",
+      "If error $<$ tolerance, stop and return the root.",
+      "Otherwise, set $x_{n-1} = x_n$ and $x_n = x_{n+1}$.",
       "Repeat."
     ],
     conditions: [
-      "f(x_{n}) \\neq f(x_{n-1}) to avoid division by zero.",
-      "No guarantee of convergence if initial guesses are far from root."
+      "$f(x_n) \\neq f(x_{n-1})$ to avoid division by zero.",
+      "No guaranteed convergence if initial guesses are far from the root."
     ],
     useCases: [
-      "Faster than bisection.",
+      "Faster than bisection method.",
       "Useful when computing derivatives analytically is too difficult."
     ],
     example: {
-      problem: "Solve x^3 - x - 1 = 0 starting with x0 = 1, x1 = 2.",
-      solution: "Root converges to 1.3247."
+      problem: "Solve $x^3 - x - 1 = 0$ starting with $x_0 = 1$, $x_1 = 2$.",
+      solution: "Root converges to $1.3247$."
     }
   },
   "false-position": {
     id: "false-position",
     name: "False Position Method",
     category: "root-finding",
-    definition: "Also known as Regula Falsi, it is a closed-interval root-finding method that connects f(a) and f(b) with a straight line and finds its x-intercept to estimate the root.",
+    definition: "Also known as Regula Falsi, it is a closed-interval root-finding method that connects $f(a)$ and $f(b)$ with a straight line and finds its x-intercept to estimate the root.",
     formula: "c = \\frac{a f(b) - b f(a)}{f(b) - f(a)}",
     algorithm: [
-      "Choose a and b such that f(a) * f(b) < 0.",
-      "Calculate the false position root estimate c.",
-      "Evaluate f(c).",
-      "If f(a) * f(c) < 0, set b = c. Else, set a = c.",
+      "Choose $a$ and $b$ such that $f(a) \\cdot f(b) < 0$.",
+      "Calculate the false position root estimate $c$.",
+      "Evaluate $f(c)$.",
+      "If $f(a) \\cdot f(c) < 0$, set $b = c$. Else, set $a = c$.",
       "Repeat until convergence."
     ],
     conditions: [
-      "f(x) must be continuous in [a, b].",
-      "f(a) * f(b) < 0."
+      "$f(x)$ must be continuous in $[a, b]$.",
+      "$f(a) \\cdot f(b) < 0$."
     ],
     useCases: [
       "Guaranteed convergence (unlike Secant).",
       "Usually faster than Bisection."
     ],
     example: {
-      problem: "Solve x^3 - x - 1 = 0 in [1, 2].",
-      solution: "Root converges to 1.3247."
+      problem: "Solve $x^3 - x - 1 = 0$ in $[1, 2]$.",
+      solution: "Root converges to $1.3247$."
     }
   },
   "newton-raphson": {
@@ -111,22 +111,22 @@ export const methodsData: Record<string, MethodInfo> = {
     definition: "An open method that uses the tangent line of the function at a current approximation to find the next approximation of the root.",
     formula: "x_{n+1} = x_n - \\frac{f(x_n)}{f'(x_n)}",
     algorithm: [
-      "Provide an initial guess x_0.",
-      "Compute x_{n+1} = x_n - f(x_n)/f'(x_n).",
-      "Check error |x_{n+1} - x_n|.",
-      "If error < tolerance, stop.",
-      "Else, update x_n = x_{n+1} and repeat."
+      "Provide an initial guess $x_0$.",
+      "Compute $x_{n+1} = x_n - \\frac{f(x_n)}{f'(x_n)}$.",
+      "Check error $|x_{n+1} - x_n|$.",
+      "If error $<$ tolerance, stop.",
+      "Else, update $x_n = x_{n+1}$ and repeat."
     ],
     conditions: [
-      "f'(x) must not be zero at any point in the iteration.",
-      "f(x) must be differentiable."
+      "$f'(x)$ must not be zero at any point in the iteration.",
+      "$f(x)$ must be differentiable."
     ],
     useCases: [
       "Extremely fast (quadratic convergence) when close to the root."
     ],
     example: {
-      problem: "Solve x^3 - x - 1 = 0 with x0 = 1.5.",
-      solution: "Root converges to 1.3247."
+      problem: "Solve $x^3 - x - 1 = 0$ with $x_0 = 1.5$.",
+      solution: "Root converges to $1.3247$."
     }
   },
   "generalized-newton": {
@@ -136,8 +136,8 @@ export const methodsData: Record<string, MethodInfo> = {
     definition: "An extension of Newton-Raphson to solve for multiple roots or roots with higher multiplicity by incorporating second derivatives.",
     formula: "x_{n+1} = x_n - \\frac{f(x_n)f'(x_n)}{(f'(x_n))^2 - f(x_n)f''(x_n)}",
     algorithm: [
-      "Choose initial guess x_0.",
-      "Evaluate f(x_n), f'(x_n), and f''(x_n).",
+      "Choose initial guess $x_0$.",
+      "Evaluate $f(x_n)$, $f'(x_n)$, and $f''(x_n)$.",
       "Update using the generalized formula.",
       "Check convergence criteria."
     ],
@@ -149,8 +149,8 @@ export const methodsData: Record<string, MethodInfo> = {
       "Accelerating convergence when dealing with multiple or repeating roots."
     ],
     example: {
-      problem: "Solve x^3 - 3*x + 2 = 0 which has a double root.",
-      solution: "Generalized Newton converges quadratically to 1.0."
+      problem: "Solve $x^3 - 3x + 2 = 0$ which has a double root.",
+      solution: "Generalized Newton converges quadratically to $1.0$."
     }
   },
   
@@ -159,11 +159,11 @@ export const methodsData: Record<string, MethodInfo> = {
     id: "iteration-system",
     name: "Fixed Point Iteration Method",
     category: "nonlinear-systems",
-    definition: "Solving a system by rearranging equations into explicit iterative forms x_i = g_i(x_1, x_2, ...).",
+    definition: "Solving a system by rearranging equations into explicit iterative forms $x_i = g_i(x_1, x_2, ...)$.",
     formula: "\\vec{x}^{(k+1)} = \\vec{g}(\\vec{x}^{(k)})",
     algorithm: [
       "Rearrange equations to isolate each variable.",
-      "Provide an initial vector guess x_0.",
+      "Provide an initial vector guess $\\vec{x}_0$.",
       "Substitute old values to compute new values.",
       "Check for convergence. Repeat."
     ],
@@ -174,7 +174,7 @@ export const methodsData: Record<string, MethodInfo> = {
       "Simple systems where equations are easily isolatable."
     ],
     example: {
-      problem: "Solve x = (x*y + 1)/2, y = (x^2 - 3)/y.",
+      problem: "Solve $x = \\frac{xy + 1}{2}$, $y = \\frac{x^2 - 3}{y}$.",
       solution: "Evaluates step by step to find fixed points."
     }
   },
@@ -185,9 +185,9 @@ export const methodsData: Record<string, MethodInfo> = {
     definition: "Solves systems of equations using Jacobian matrix updates.",
     formula: "\\vec{x}^{(k+1)} = \\vec{x}^{(k)} - [J(\\vec{x}^{(k)})]^{-1} \\vec{F}(\\vec{x}^{(k)})",
     algorithm: [
-      "Define F(x) = 0.",
-      "Find Jacobian matrix J(x).",
-      "Solve system of linear equations J * delta = -F.",
+      "Define $\\vec{F}(\\vec{x}) = 0$.",
+      "Find Jacobian matrix $J(\\vec{x})$.",
+      "Solve system of linear equations $J \\vec{d} = -\\vec{F}$.",
       "Update variable vector and repeat."
     ],
     conditions: [
@@ -197,7 +197,7 @@ export const methodsData: Record<string, MethodInfo> = {
       "Solving complex non-linear systems in engineering and physics."
     ],
     example: {
-      problem: "Solve x^2 + y^2 = 4, e^x + y = 1.",
+      problem: "Solve $x^2 + y^2 = 4$, $e^x + y = 1$.",
       solution: "Converges using linear system solvers per iteration."
     }
   },
@@ -211,19 +211,19 @@ export const methodsData: Record<string, MethodInfo> = {
     formula: "P(x) = y_0 + u \\Delta y_0 + \\frac{u(u-1)}{2!} \\Delta^2 y_0 + ...",
     algorithm: [
       "Generate difference table.",
-      "Determine spacing h and calculate u = (x - x_0)/h.",
+      "Determine spacing $h$ and calculate $u = \\frac{x - x_0}{h}$.",
       "Substitute values from the top row of the table into formula.",
       "Evaluate sum."
     ],
     conditions: [
-      "Equally spaced intervals of x."
+      "Equally spaced intervals of $x$."
     ],
     useCases: [
       "Interpolating values near the beginning of the table."
     ],
     example: {
-      problem: "Find y at x=1.5 given table: x=[1, 2, 3], y=[1, 4, 9].",
-      solution: "Using Forward difference, y = 2.25."
+      problem: "Find $y$ at $x=1.5$ given table: $x=[1, 2, 3]$, $y=[1, 4, 9]$.",
+      solution: "Using Forward difference, $y = 2.25$."
     }
   },
   "backward-difference": {
@@ -234,7 +234,7 @@ export const methodsData: Record<string, MethodInfo> = {
     formula: "P(x) = y_n + u \\nabla y_n + \\frac{u(u+1)}{2!} \\nabla^2 y_n + ...",
     algorithm: [
       "Generate difference table.",
-      "Calculate u = (x - x_n)/h.",
+      "Calculate $u = \\frac{x - x_n}{h}$.",
       "Substitute values from the bottom row.",
       "Evaluate sum."
     ],
@@ -245,8 +245,8 @@ export const methodsData: Record<string, MethodInfo> = {
       "Interpolating values near the end of the table."
     ],
     example: {
-      problem: "Find y at x=2.5 given x=[1, 2, 3], y=[1, 4, 9].",
-      solution: "Using Backward difference, y = 6.25."
+      problem: "Find $y$ at $x=2.5$ given $x=[1, 2, 3]$, $y=[1, 4, 9]$.",
+      solution: "Using Backward difference, $y = 6.25$."
     }
   },
 
@@ -258,21 +258,21 @@ export const methodsData: Record<string, MethodInfo> = {
     definition: "A first-order numerical procedure for solving ordinary differential equations (ODEs) with a given initial value.",
     formula: "y_{n+1} = y_n + h f(x_n, y_n)",
     algorithm: [
-      "Start with x_0, y_0, step size h.",
-      "Calculate slope = f(x_n, y_n).",
-      "Compute y_{n+1} = y_n + h * slope.",
-      "Update x_{n+1} = x_n + h.",
+      "Start with $x_0$, $y_0$, step size $h$.",
+      "Calculate slope = $f(x_n, y_n)$.",
+      "Compute $y_{n+1} = y_n + h \\cdot \\text{slope}$.",
+      "Update $x_{n+1} = x_n + h$.",
       "Repeat."
     ],
     conditions: [
-      "Requires initial condition (x0, y0)."
+      "Requires initial condition $(x_0, y_0)$."
     ],
     useCases: [
       "Quick, basic approximation of simple differential equations."
     ],
     example: {
-      problem: "Solve dy/dx = x + y with x0=0, y0=1, h=0.1 to find y(0.2).",
-      solution: "Iteration 1: y(0.1) = 1.1. Iteration 2: y(0.2) = 1.22."
+      problem: "Solve $\\frac{dy}{dx} = x + y$ with $x_0=0$, $y_0=1$, $h=0.1$ to find $y(0.2)$.",
+      solution: "Iteration 1: $y(0.1) = 1.1$. Iteration 2: $y(0.2) = 1.22$."
     }
   },
   "modified-euler": {
@@ -282,8 +282,8 @@ export const methodsData: Record<string, MethodInfo> = {
     definition: "An improved predictor-corrector method that averages the slope at the current step and the predicted next step.",
     formula: "y_{n+1} = y_n + \\frac{h}{2} [ f(x_n, y_n) + f(x_{n+1}, y_{n+1}^*) ]",
     algorithm: [
-      "Predict y_{n+1}^* = y_n + h f(x_n, y_n).",
-      "Correct y_{n+1} using the averaged slope at x_n and predicted x_{n+1}.",
+      "Predict $y_{n+1}^* = y_n + h f(x_n, y_n)$.",
+      "Correct $y_{n+1}$ using the averaged slope at $x_n$ and predicted $x_{n+1}$.",
       "Repeat."
     ],
     conditions: [
@@ -293,8 +293,8 @@ export const methodsData: Record<string, MethodInfo> = {
       "Better convergence than standard Euler."
     ],
     example: {
-      problem: "Solve dy/dx = x + y with x0=0, y0=1, h=0.1.",
-      solution: "Step 1: Predict y*(0.1)=1.1, Correct y(0.1)=1.11."
+      problem: "Solve $\\frac{dy}{dx} = x + y$ with $x_0=0$, $y_0=1$, $h=0.1$.",
+      solution: "Step 1: Predict $y^*(0.1)=1.1$, Correct $y(0.1)=1.11$."
     }
   },
   "rk4": {
@@ -304,11 +304,11 @@ export const methodsData: Record<string, MethodInfo> = {
     definition: "A widely used, highly accurate fourth-order algorithm for the numerical solution of ODEs.",
     formula: "y_{n+1} = y_n + \\frac{1}{6}(k_1 + 2k_2 + 2k_3 + k_4)",
     algorithm: [
-      "Calculate k1 = h * f(x_n, y_n).",
-      "Calculate k2 = h * f(x_n + h/2, y_n + k1/2).",
-      "Calculate k3 = h * f(x_n + h/2, y_n + k2/2).",
-      "Calculate k4 = h * f(x_n + h, y_n + k3).",
-      "Update y_{n+1} = y_n + (k1 + 2k2 + 2k3 + k4)/6."
+      "Calculate $k_1 = h f(x_n, y_n)$.",
+      "Calculate $k_2 = h f(x_n + \\frac{h}{2}, y_n + \\frac{k_1}{2})$.",
+      "Calculate $k_3 = h f(x_n + \\frac{h}{2}, y_n + \\frac{k_2}{2})$.",
+      "Calculate $k_4 = h f(x_n + h, y_n + k_3)$.",
+      "Update $y_{n+1} = y_n + \\frac{k_1 + 2k_2 + 2k_3 + k_4}{6}$."
     ],
     conditions: [
       "Requires initial condition."
@@ -317,7 +317,7 @@ export const methodsData: Record<string, MethodInfo> = {
       "Standard solver for ODEs in scientific computing."
     ],
     example: {
-      problem: "Solve dy/dx = x + y with x0=0, y0=1, h=0.1.",
+      problem: "Solve $\\frac{dy}{dx} = x + y$ with $x_0=0$, $y_0=1$, $h=0.1$.",
       solution: "Converges with high accuracy."
     }
   },
@@ -330,20 +330,20 @@ export const methodsData: Record<string, MethodInfo> = {
     definition: "Approximates the area under a curve by dividing the interval into trapezoids.",
     formula: "I \\approx \\frac{h}{2} [ (y_0 + y_n) + 2 \\sum_{i=1}^{n-1} y_i ]",
     algorithm: [
-      "Determine step size h = (b - a)/n.",
-      "Generate table of x and y values.",
+      "Determine step size $h = \\frac{b - a}{n}$.",
+      "Generate table of $x$ and $y$ values.",
       "Apply Trapezoidal formula.",
       "Compute final integral value."
     ],
     conditions: [
-      "Interval [a, b] is continuous."
+      "Interval $[a, b]$ is continuous."
     ],
     useCases: [
       "Integrating continuous functions with arbitrary interval partitions."
     ],
     example: {
-      problem: "Integrate x^2 from 0 to 1 with n=4.",
-      solution: "Integral value ≈ 0.34375 (Analytical value: 0.3333)"
+      problem: "Integrate $x^2$ from $0$ to $1$ with $n=4$.",
+      solution: "Integral value $\\approx 0.34375$ (Analytical value: $0.3333$)"
     }
   },
   "simpson-13": {
@@ -353,20 +353,20 @@ export const methodsData: Record<string, MethodInfo> = {
     definition: "Approximates the area under a curve using parabolas over subintervals.",
     formula: "I \\approx \\frac{h}{3} [ (y_0 + y_n) + 4 \\sum_{odd} y_i + 2 \\sum_{even} y_i ]",
     algorithm: [
-      "Ensure subintervals count n is even.",
-      "Calculate h = (b-a)/n.",
+      "Ensure subintervals count $n$ is even.",
+      "Calculate $h = \\frac{b-a}{n}$.",
       "Apply Simpson's 1/3 formula using odd and even indices.",
       "Calculate result."
     ],
     conditions: [
-      "n must be an even integer."
+      "$n$ must be an even integer."
     ],
     useCases: [
       "Higher precision integration than Trapezoidal."
     ],
     example: {
-      problem: "Integrate x^2 from 0 to 1 with n=4.",
-      solution: "Integral value = 0.33333."
+      problem: "Integrate $x^2$ from $0$ to $1$ with $n=4$.",
+      solution: "Integral value $= 0.33333$."
     }
   },
   "simpson-38": {
@@ -376,20 +376,20 @@ export const methodsData: Record<string, MethodInfo> = {
     definition: "Approximates area using third-order polynomials over partitions.",
     formula: "I \\approx \\frac{3h}{8} [ (y_0 + y_n) + 3 \\sum_{i \\neq 3k} y_i + 2 \\sum_{i=3, 6...} y_i ]",
     algorithm: [
-      "Ensure n is a multiple of 3.",
-      "Compute h = (b-a)/n.",
+      "Ensure $n$ is a multiple of 3.",
+      "Compute $h = \\frac{b-a}{n}$.",
       "Apply Simpson's 3/8 formula.",
       "Compute result."
     ],
     conditions: [
-      "n must be a multiple of 3."
+      "$n$ must be a multiple of 3."
     ],
     useCases: [
       "Highly accurate integration, especially when matching specific sample size partitions."
     ],
     example: {
-      problem: "Integrate x^2 from 0 to 1 with n=3.",
-      solution: "Integral value = 0.33333."
+      problem: "Integrate $x^2$ from $0$ to $1$ with $n=3$.",
+      solution: "Integral value $= 0.33333$."
     }
   }
 };

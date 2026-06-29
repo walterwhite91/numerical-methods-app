@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { categories, methodsData } from '@/lib/methodData';
 import MathDisplay from '@/components/MathDisplay';
+import TextWithMath from '@/components/TextWithMath';
 
 export default function MethodExplorer() {
   const searchParams = useSearchParams();
@@ -90,7 +91,7 @@ export default function MethodExplorer() {
           <div>
             <h1 style={{ fontSize: '2.25rem', marginBottom: '1rem' }}>{method.name}</h1>
             <p style={{ fontSize: '1.1rem', color: 'var(--text-primary)', marginBottom: '2rem' }}>
-              {method.definition}
+              <TextWithMath text={method.definition} />
             </p>
 
             <div style={{ marginBottom: '2rem' }}>
@@ -104,7 +105,9 @@ export default function MethodExplorer() {
               <h2 style={{ fontSize: '1.5rem', marginBottom: '0.75rem' }}>Algorithm Steps</h2>
               <ol style={{ paddingLeft: '1.5rem', color: 'var(--text-primary)' }}>
                 {method.algorithm.map((step, idx) => (
-                  <li key={idx} style={{ marginBottom: '0.5rem' }}>{step}</li>
+                  <li key={idx} style={{ marginBottom: '0.5rem' }}>
+                    <TextWithMath text={step} />
+                  </li>
                 ))}
               </ol>
             </div>
@@ -114,7 +117,9 @@ export default function MethodExplorer() {
                 <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Conditions & Limitations</h2>
                 <ul style={{ paddingLeft: '1.25rem', color: 'var(--text-secondary)' }}>
                   {method.conditions.map((cond, idx) => (
-                    <li key={idx} style={{ marginBottom: '0.25rem' }}>{cond}</li>
+                    <li key={idx} style={{ marginBottom: '0.25rem' }}>
+                      <TextWithMath text={cond} />
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -122,7 +127,9 @@ export default function MethodExplorer() {
                 <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Typical Use Cases</h2>
                 <ul style={{ paddingLeft: '1.25rem', color: 'var(--text-secondary)' }}>
                   {method.useCases.map((use, idx) => (
-                    <li key={idx} style={{ marginBottom: '0.25rem' }}>{use}</li>
+                    <li key={idx} style={{ marginBottom: '0.25rem' }}>
+                      <TextWithMath text={use} />
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -130,8 +137,12 @@ export default function MethodExplorer() {
 
             <div style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '1.5rem', backgroundColor: '#fff' }}>
               <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Example Problem</h2>
-              <p style={{ fontWeight: '500', marginBottom: '0.5rem' }}>{method.example.problem}</p>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>{method.example.solution}</p>
+              <p style={{ fontWeight: '500', marginBottom: '0.5rem' }}>
+                <TextWithMath text={method.example.problem} />
+              </p>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+                <TextWithMath text={method.example.solution} />
+              </p>
             </div>
           </div>
         ) : (

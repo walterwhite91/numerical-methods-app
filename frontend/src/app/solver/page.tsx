@@ -420,7 +420,9 @@ export default function SolverPage() {
                     {result.calculation_steps.map((stepStr: string, idx: number) => (
                       <div key={idx} style={{ padding: '0.5rem 0', borderBottom: idx < result.calculation_steps.length - 1 ? '1px solid var(--border-color)' : 'none' }}>
                         <span style={{ fontWeight: '500', marginRight: '0.5rem', color: 'var(--text-secondary)' }}>Step {idx + 1}:</span>
-                        <code>{stepStr}</code>
+                        <div style={{ display: 'inline-block', verticalAlign: 'middle', overflowX: 'auto', maxWidth: '100%' }}>
+                          <MathDisplay math={stepStr} />
+                        </div>
                       </div>
                     ))}
                   </div>
