@@ -10,7 +10,9 @@ export default function SolverPage() {
   const [params, setParams] = useState<Record<string, any>>({
     func_str: 'x**3 - x - 1',
     deriv_str: '3*x**2 - 1',
-    deriv2_str: '6*x',
+    multiplicity: 1,
+    true_val: 3.141592,
+    approx_val: 3.14,
     a: 1.0,
     b: 2.0,
     x0: 1.5,
@@ -46,6 +48,26 @@ export default function SolverPage() {
       max_iter: Number(params.max_iter)
     };
 
+    if (method === 'error-calculation') {
+      const tv = Number(params.true_val);
+      const av = Number(params.approx_val);
+      const ea = Math.abs(tv - av);
+      const er = tv !== 0 ? Math.abs((tv - av) / tv) : 0;
+      const ep = er * 100;
+
+      setResult({
+        success: true,
+        message: "Error computed.",
+        error_results: {
+          absolute_error: ea,
+          relative_error: er,
+          percentage_error: ep
+        }
+      });
+      setLoading(false);
+      return;
+    }
+
     // Construct endpoint URL and payload based on selected method
     if (['bisection', 'false-position'].includes(method)) {
       url = `${API_BASE}/root-finding/${method}`;
@@ -62,19 +84,17 @@ export default function SolverPage() {
     } else if (method === 'generalized-newton') {
       url = `${API_BASE}/root-finding/generalized-newton`;
       payload.deriv_str = params.deriv_str;
-      payload.deriv2_str = params.deriv2_str;
+      payload.multiplicity = Number(params.multiplicity);
       payload.x0 = Number(params.x0);
     } else if (['euler', 'modified-euler', 'rk4'].includes(method)) {
       url = `${API_BASE}/ode/${method}`;
       payload = {
         func_str: params.func_str,
         x0: Number(params.x0),
-        y0: Number(params.x0), // Using x0 for simplicity or mapping custom
+        y0: Number(params.x1), // mapped from x1 input correctly
         h: Number(params.h),
         steps_count: Number(params.steps_count)
       };
-      // Map custom variables properly
-      payload.y0 = Number(params.x1); // Map to y0
     } else if (['trapezoidal', 'simpson-13', 'simpson-38'].includes(method)) {
       url = `${API_BASE}/integration`;
       payload = {
@@ -120,7 +140,10 @@ export default function SolverPage() {
                 onChange={(e) => setMethod(e.target.value)}
                 className="input-field"
               >
-                <optgroup label="Root Finding">
+                <optgroup label="Detection of Error">
+                  <option value="error-calculation">Absolute & Relative Error</option>
+                </optgroup>
+                <optgroup label="Roots of Equations">
                   <option value="bisection">Bisection Method</option>
                   <option value="secant">Secant Method</option>
                   <option value="false-position">False Position Method</option>
@@ -140,17 +163,46 @@ export default function SolverPage() {
               </select>
             </div>
 
-            <div className="input-group">
-              <label className="input-label">Function f(x) or f(x, y)</label>
-              <input
-                type="text"
-                className="input-field"
-                value={params.func_str}
-                onChange={(e) => handleInputChange('func_str', e.target.value)}
-                placeholder="e.g. x**3 - x - 1"
-                required
-              />
-            </div>
+            {method !== 'error-calculation' && (
+              <div className="input-group">
+                <label className="input-label">Function f(x) or f(x, y)</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  value={params.func_str}
+                  onChange={(e) => handleInputChange('func_str', e.target.value)}
+                  placeholder="e.g. x**3 - x - 1"
+                  required
+                />
+              </div>
+            )}
+
+            {method === 'error-calculation' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="input-group">
+                  <label className="input-label">True Value (X)</label>
+                  <input
+                    type="number"
+                    step="any"
+                    className="input-field"
+                    value={params.true_val}
+                    onChange={(e) => handleInputChange('true_val', e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">Approximate Value (Xa)</label>
+                  <input
+                    type="number"
+                    step="any"
+                    className="input-field"
+                    value={params.approx_val}
+                    onChange={(e) => handleInputChange('approx_val', e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+            )}
 
             {method === 'newton-raphson' && (
               <div className="input-group">
@@ -180,13 +232,13 @@ export default function SolverPage() {
                   />
                 </div>
                 <div className="input-group">
-                  <label className="input-label">Second Derivative f''(x)</label>
+                  <label className="input-label">Multiplicity (m)</label>
                   <input
-                    type="text"
+                    type="number"
                     className="input-field"
-                    value={params.deriv2_str}
-                    onChange={(e) => handleInputChange('deriv2_str', e.target.value)}
-                    placeholder="e.g. 6*x"
+                    value={params.multiplicity}
+                    onChange={(e) => handleInputChange('multiplicity', e.target.value)}
+                    placeholder="e.g. 2"
                     required
                   />
                 </div>
@@ -350,6 +402,13 @@ export default function SolverPage() {
                   {result.root !== undefined ? `Root = ${result.root}` : null}
                   {result.integral !== undefined ? `Integral = ${result.integral}` : null}
                   {result.final_y !== undefined ? `y(${result.final_x}) = ${result.final_y}` : null}
+                  {result.error_results !== undefined ? (
+                    <div style={{ fontSize: '1.25rem', lineHeight: '1.8' }}>
+                      <div>Absolute Error: {result.error_results.absolute_error.toExponential(4)}</div>
+                      <div>Relative Error: {result.error_results.relative_error.toExponential(4)}</div>
+                      <div>Percentage Error: {result.error_results.percentage_error.toFixed(4)}%</div>
+                    </div>
+                  ) : null}
                 </div>
                 <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
                   {result.message}

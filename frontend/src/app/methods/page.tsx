@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { categories, methodsData } from '@/lib/methodData';
 import MathDisplay from '@/components/MathDisplay';
 import TextWithMath from '@/components/TextWithMath';
 
-export default function MethodExplorer() {
+function MethodExplorerContent() {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get('category') || 'root-finding';
   
@@ -152,5 +152,13 @@ export default function MethodExplorer() {
         )}
       </section>
     </div>
+  );
+}
+
+export default function MethodExplorer() {
+  return (
+    <Suspense fallback={<div style={{ textAlign: 'center', marginTop: '4rem', color: 'var(--text-secondary)' }}>Loading method explorer...</div>}>
+      <MethodExplorerContent />
+    </Suspense>
   );
 }

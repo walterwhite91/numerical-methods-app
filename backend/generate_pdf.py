@@ -11,17 +11,28 @@ from pygments.formatters import HtmlFormatter
 
 # Define the files in order
 files = [
+    "utils.py",
+    "absolute_relative_error.py",
+    "truncation_error.py",
     "bisection.py",
     "secant.py",
     "false_position.py",
     "newton_raphson.py",
     "generalized_newton.py",
-    "nonlinear_system.py",
-    "interpolation.py",
-    "ode.py",
-    "integration.py",
-    "linear_system.py",
-    "utils.py"
+    "lu_decomposition.py",
+    "thomas_algorithm.py",
+    "gauss_jacobi.py",
+    "gauss_seidel.py",
+    "forward_difference.py",
+    "backward_difference.py",
+    "euler.py",
+    "modified_euler.py",
+    "rk4.py",
+    "trapezoidal.py",
+    "simpson_13.py",
+    "simpson_38.py",
+    "iteration_system.py",
+    "newton_system.py"
 ]
 
 methods_dir = "backend/methods"
@@ -74,9 +85,8 @@ html_content = f"""
         background-color: #ffffff !important;
     }}
     .page-container {{
-        page-break-after: always;
-        break-after: page;
         background-color: #ffffff !important;
+        margin-bottom: 25px;
     }}
 }}
 body {{
@@ -88,9 +98,7 @@ body {{
 }}
 .page-container {{
     background-color: #ffffff;
-    page-break-after: always;
-    break-after: page;
-    margin-bottom: 10px;
+    margin-bottom: 25px;
 }}
 .tab-header {{
     background-color: #f3f3f3;
@@ -102,6 +110,8 @@ body {{
     display: flex;
     justify-content: space-between;
     align-items: center;
+    break-after: avoid;
+    page-break-after: avoid;
 }}
 .file-name {{
     color: #000000;

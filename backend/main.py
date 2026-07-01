@@ -8,13 +8,24 @@ from methods.secant import secant_method
 from methods.false_position import false_position_method
 from methods.newton_raphson import newton_raphson_method
 from methods.generalized_newton import generalized_newton_method
-from methods.nonlinear_system import iteration_method_system, newton_raphson_system
-from methods.interpolation import generate_difference_table, evaluate_formula_from_table
-from methods.ode import euler_method, modified_euler_method, runge_kutta_4
-from methods.integration import numerical_integration
-from methods.linear_system import lu_decomposition, tridiagonal_solver, gauss_jacobi, gauss_seidel
+from methods.iteration_system import iteration_method_system
+from methods.newton_system import newton_raphson_system
+from methods.forward_difference import generate_difference_table, evaluate_formula_forward
+from methods.backward_difference import evaluate_formula_backward
+from methods.euler import euler_method
+from methods.modified_euler import modified_euler_method
+from methods.rk4 import runge_kutta_4
+from methods.trapezoidal import numerical_integration_trapezoidal
+from methods.simpson_13 import numerical_integration_simpson_13
+from methods.simpson_38 import numerical_integration_simpson_38
+from methods.lu_decomposition import lu_decomposition
+from methods.thomas_algorithm import tridiagonal_solver
+from methods.gauss_jacobi import gauss_jacobi
+from methods.gauss_seidel import gauss_seidel
+from methods.absolute_relative_error import absolute_relative_error
+from methods.truncation_error import truncation_error
 
-app = FastAPI(title="Numerical Methods API", description="Educational API for numerical methods")
+app = FastAPI(title="Numerical Methods API", description="Educational API for numerical methods — MCSC 202")
 
 app.add_middleware(
     CORSMiddleware,
@@ -27,13 +38,13 @@ app.add_middleware(
 class RootRequest(BaseModel):
     func_str: str
     deriv_str: Optional[str] = None
-    deriv2_str: Optional[str] = None
     a: Optional[float] = None
     b: Optional[float] = None
     x0: Optional[float] = None
     x1: Optional[float] = None
     tol: float = 1e-6
     max_iter: int = 100
+    multiplicity: Optional[int] = 1   # for generalised Newton-Raphson (MCSC-202)
 
 @app.post("/api/root-finding/bisection")
 def solve_bisection(req: RootRequest):
@@ -53,7 +64,11 @@ def solve_newton_raphson(req: RootRequest):
 
 @app.post("/api/root-finding/generalized-newton")
 def solve_generalized_newton(req: RootRequest):
-    return generalized_newton_method(req.func_str, req.deriv_str, req.deriv2_str, req.x0, req.tol, req.max_iter)
+    return generalized_newton_method(
+        req.func_str, req.deriv_str, req.x0,
+        multiplicity=req.multiplicity or 1,
+        tol=req.tol, max_iter=req.max_iter
+    )
 
 class ODERequest(BaseModel):
     func_str: str
@@ -83,4 +98,11 @@ class IntegrationRequest(BaseModel):
 
 @app.post("/api/integration")
 def solve_integration(req: IntegrationRequest):
-    return numerical_integration(req.func_str, req.a, req.b, req.n, req.method)
+    if req.method == "trapezoidal":
+        return numerical_integration_trapezoidal(req.func_str, req.a, req.b, req.n)
+    elif req.method == "simpson_13":
+        return numerical_integration_simpson_13(req.func_str, req.a, req.b, req.n)
+    elif req.method == "simpson_38":
+        return numerical_integration_simpson_38(req.func_str, req.a, req.b, req.n)
+    else:
+        return {"success": False, "message": "Unknown integration method"}
