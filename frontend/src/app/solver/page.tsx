@@ -1,38 +1,83 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import MathDisplay from '@/components/MathDisplay';
 
-const API_BASE = 'http://localhost:8000/api';
+const API_BASE = 'http://127.0.0.1:8000/api';
 
-export default function SolverPage() {
+const DEFAULT_PARAMS = {
+  func_str: 'x**3 - x - 1',
+  deriv_str: '3*x**2 - 1',
+  multiplicity: 1,
+  true_val: 3.141592,
+  approx_val: 3.14,
+  a: 1.0,
+  b: 2.0,
+  x0: 1.5,
+  x1: 2.0,
+  h: 0.1,
+  steps_count: 5,
+  n: 4,
+  tol: 1e-6,
+  max_iter: 50,
+};
+
+function SolverContent() {
+  const searchParams = useSearchParams();
   const [method, setMethod] = useState('bisection');
-  const [params, setParams] = useState<Record<string, any>>({
-    func_str: 'x**3 - x - 1',
-    deriv_str: '3*x**2 - 1',
-    multiplicity: 1,
-    true_val: 3.141592,
-    approx_val: 3.14,
-    a: 1.0,
-    b: 2.0,
-    x0: 1.5,
-    x1: 2.0,
-    h: 0.1,
-    steps_count: 5,
-    n: 4,
-    tol: 1e-6,
-    max_iter: 50
-  });
-
+  const [params, setParams] = useState<Record<string, any>>(DEFAULT_PARAMS);
   const [loading, setLoading] = useState(false);
+  const [prefilling, setPrefilling] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState<any>(null);
+  const [prefillNote, setPrefillNote] = useState<string | null>(null);
+
+  // On mount, check for ?method= and ?qid= params to pre-fill from API
+  useEffect(() => {
+    const urlMethod = searchParams.get('method');
+    const urlQid = searchParams.get('qid');
+    const urlCategory = searchParams.get('category');
+
+    if (urlMethod) setMethod(urlMethod);
+
+    if (urlQid) {
+      setPrefilling(true);
+      setPrefillNote(null);
+      fetch(`${API_BASE}/past-qna/${urlQid}/solver-params`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.success && data.params) {
+            const p = data.params;
+            setParams(prev => ({
+              ...prev,
+              ...(p.func_str    && { func_str:    p.func_str }),
+              ...(p.deriv_str   && { deriv_str:   p.deriv_str }),
+              ...(p.a           !== undefined && { a:           p.a }),
+              ...(p.b           !== undefined && { b:           p.b }),
+              ...(p.x0          !== undefined && { x0:          p.x0 }),
+              ...(p.y0          !== undefined && { x1:          p.y0 }),   // solver uses x1 for y0
+              ...(p.h           !== undefined && { h:           p.h }),
+              ...(p.n           !== undefined && { n:           p.n }),
+              ...(p.steps_count !== undefined && { steps_count: p.steps_count }),
+              ...(p.tol         !== undefined && { tol:         p.tol }),
+              ...(p.max_iter    !== undefined && { max_iter:    p.max_iter }),
+              ...(p.multiplicity!== undefined && { multiplicity:p.multiplicity }),
+            }));
+            if (p.method) setMethod(p.method);
+            setPrefillNote('Inputs pre-filled from the past exam question.');
+          }
+        })
+        .catch(() => setPrefillNote('Could not auto-fill inputs — please enter them manually.'))
+        .finally(() => setPrefilling(false));
+    } else if (urlMethod) {
+      setMethod(urlMethod);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleInputChange = (key: string, val: any) => {
-    setParams(prev => ({
-      ...prev,
-      [key]: val
-    }));
+    setParams(prev => ({ ...prev, [key]: val }));
   };
 
   const handleSolve = async (e: React.FormEvent) => {
@@ -45,7 +90,7 @@ export default function SolverPage() {
     let payload: Record<string, any> = {
       func_str: params.func_str,
       tol: Number(params.tol),
-      max_iter: Number(params.max_iter)
+      max_iter: Number(params.max_iter),
     };
 
     if (method === 'error-calculation') {
@@ -53,22 +98,15 @@ export default function SolverPage() {
       const av = Number(params.approx_val);
       const ea = Math.abs(tv - av);
       const er = tv !== 0 ? Math.abs((tv - av) / tv) : 0;
-      const ep = er * 100;
-
       setResult({
         success: true,
-        message: "Error computed.",
-        error_results: {
-          absolute_error: ea,
-          relative_error: er,
-          percentage_error: ep
-        }
+        message: 'Error computed.',
+        error_results: { absolute_error: ea, relative_error: er, percentage_error: er * 100 },
       });
       setLoading(false);
       return;
     }
 
-    // Construct endpoint URL and payload based on selected method
     if (['bisection', 'false-position'].includes(method)) {
       url = `${API_BASE}/root-finding/${method}`;
       payload.a = Number(params.a);
@@ -91,9 +129,9 @@ export default function SolverPage() {
       payload = {
         func_str: params.func_str,
         x0: Number(params.x0),
-        y0: Number(params.x1), // mapped from x1 input correctly
+        y0: Number(params.x1),
         h: Number(params.h),
-        steps_count: Number(params.steps_count)
+        steps_count: Number(params.steps_count),
       };
     } else if (['trapezoidal', 'simpson-13', 'simpson-38'].includes(method)) {
       url = `${API_BASE}/integration`;
@@ -102,7 +140,7 @@ export default function SolverPage() {
         a: Number(params.a),
         b: Number(params.b),
         n: Number(params.n),
-        method: method.replace('-', '_')
+        method: method.replace('-', '_'),
       };
     }
 
@@ -110,7 +148,7 @@ export default function SolverPage() {
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
       const data = await response.json();
       if (!response.ok || data.success === false) {
@@ -118,7 +156,7 @@ export default function SolverPage() {
       } else {
         setResult(data);
       }
-    } catch (err: any) {
+    } catch {
       setError('Could not connect to the backend server. Please verify it is running on port 8000.');
     } finally {
       setLoading(false);
@@ -127,21 +165,29 @@ export default function SolverPage() {
 
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-      <h1 style={{ marginBottom: '1.5rem' }}>Step-by-Step Solver</h1>
+      <h1 style={{ marginBottom: '0.5rem' }}>Step-by-Step Solver</h1>
+
+      {prefilling && (
+        <div style={{ padding: '0.75rem 1rem', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.87rem', color: '#1d4ed8' }}>
+          Loading inputs from past exam question…
+        </div>
+      )}
+      {prefillNote && !prefilling && (
+        <div style={{ padding: '0.75rem 1rem', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.87rem', color: '#16a34a', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
+          {prefillNote}
+        </div>
+      )}
+
       <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr', gap: '2rem' }}>
-        
         {/* Input Panel */}
         <section>
           <form onSubmit={handleSolve} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div className="input-group">
               <label className="input-label">Select Method</label>
-              <select
-                value={method}
-                onChange={(e) => setMethod(e.target.value)}
-                className="input-field"
-              >
+              <select value={method} onChange={e => setMethod(e.target.value)} className="input-field">
                 <optgroup label="Detection of Error">
-                  <option value="error-calculation">Absolute & Relative Error</option>
+                  <option value="error-calculation">Absolute &amp; Relative Error</option>
                 </optgroup>
                 <optgroup label="Roots of Equations">
                   <option value="bisection">Bisection Method</option>
@@ -151,14 +197,14 @@ export default function SolverPage() {
                   <option value="generalized-newton">Generalized Newton-Raphson</option>
                 </optgroup>
                 <optgroup label="Ordinary Differential Equations">
-                  <option value="euler">Euler's Method</option>
+                  <option value="euler">Euler&apos;s Method</option>
                   <option value="modified-euler">Modified Euler Method</option>
                   <option value="rk4">Runge-Kutta 4th Order (RK4)</option>
                 </optgroup>
                 <optgroup label="Numerical Integration">
                   <option value="trapezoidal">Trapezoidal Rule</option>
-                  <option value="simpson-13">Simpson's 1/3 Rule</option>
-                  <option value="simpson-38">Simpson's 3/8 Rule</option>
+                  <option value="simpson-13">Simpson&apos;s 1/3 Rule</option>
+                  <option value="simpson-38">Simpson&apos;s 3/8 Rule</option>
                 </optgroup>
               </select>
             </div>
@@ -166,14 +212,9 @@ export default function SolverPage() {
             {method !== 'error-calculation' && (
               <div className="input-group">
                 <label className="input-label">Function f(x) or f(x, y)</label>
-                <input
-                  type="text"
-                  className="input-field"
-                  value={params.func_str}
-                  onChange={(e) => handleInputChange('func_str', e.target.value)}
-                  placeholder="e.g. x**3 - x - 1"
-                  required
-                />
+                <input type="text" className="input-field" value={params.func_str}
+                  onChange={e => handleInputChange('func_str', e.target.value)}
+                  placeholder="e.g. x**3 - x - 1" required />
               </div>
             )}
 
@@ -181,66 +222,39 @@ export default function SolverPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="input-group">
                   <label className="input-label">True Value (X)</label>
-                  <input
-                    type="number"
-                    step="any"
-                    className="input-field"
-                    value={params.true_val}
-                    onChange={(e) => handleInputChange('true_val', e.target.value)}
-                    required
-                  />
+                  <input type="number" step="any" className="input-field" value={params.true_val}
+                    onChange={e => handleInputChange('true_val', e.target.value)} required />
                 </div>
                 <div className="input-group">
                   <label className="input-label">Approximate Value (Xa)</label>
-                  <input
-                    type="number"
-                    step="any"
-                    className="input-field"
-                    value={params.approx_val}
-                    onChange={(e) => handleInputChange('approx_val', e.target.value)}
-                    required
-                  />
+                  <input type="number" step="any" className="input-field" value={params.approx_val}
+                    onChange={e => handleInputChange('approx_val', e.target.value)} required />
                 </div>
               </div>
             )}
 
             {method === 'newton-raphson' && (
               <div className="input-group">
-                <label className="input-label">First Derivative f'(x)</label>
-                <input
-                  type="text"
-                  className="input-field"
-                  value={params.deriv_str}
-                  onChange={(e) => handleInputChange('deriv_str', e.target.value)}
-                  placeholder="e.g. 3*x**2 - 1"
-                  required
-                />
+                <label className="input-label">First Derivative f&apos;(x)</label>
+                <input type="text" className="input-field" value={params.deriv_str}
+                  onChange={e => handleInputChange('deriv_str', e.target.value)}
+                  placeholder="e.g. 3*x**2 - 1" required />
               </div>
             )}
 
             {method === 'generalized-newton' && (
               <>
                 <div className="input-group">
-                  <label className="input-label">First Derivative f'(x)</label>
-                  <input
-                    type="text"
-                    className="input-field"
-                    value={params.deriv_str}
-                    onChange={(e) => handleInputChange('deriv_str', e.target.value)}
-                    placeholder="e.g. 3*x**2 - 1"
-                    required
-                  />
+                  <label className="input-label">First Derivative f&apos;(x)</label>
+                  <input type="text" className="input-field" value={params.deriv_str}
+                    onChange={e => handleInputChange('deriv_str', e.target.value)}
+                    placeholder="e.g. 3*x**2 - 1" required />
                 </div>
                 <div className="input-group">
                   <label className="input-label">Multiplicity (m)</label>
-                  <input
-                    type="number"
-                    className="input-field"
-                    value={params.multiplicity}
-                    onChange={(e) => handleInputChange('multiplicity', e.target.value)}
-                    placeholder="e.g. 2"
-                    required
-                  />
+                  <input type="number" className="input-field" value={params.multiplicity}
+                    onChange={e => handleInputChange('multiplicity', e.target.value)}
+                    placeholder="e.g. 2" required />
                 </div>
               </>
             )}
@@ -249,25 +263,13 @@ export default function SolverPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="input-group">
                   <label className="input-label">Lower bound (a)</label>
-                  <input
-                    type="number"
-                    step="any"
-                    className="input-field"
-                    value={params.a}
-                    onChange={(e) => handleInputChange('a', e.target.value)}
-                    required
-                  />
+                  <input type="number" step="any" className="input-field" value={params.a}
+                    onChange={e => handleInputChange('a', e.target.value)} required />
                 </div>
                 <div className="input-group">
                   <label className="input-label">Upper bound (b)</label>
-                  <input
-                    type="number"
-                    step="any"
-                    className="input-field"
-                    value={params.b}
-                    onChange={(e) => handleInputChange('b', e.target.value)}
-                    required
-                  />
+                  <input type="number" step="any" className="input-field" value={params.b}
+                    onChange={e => handleInputChange('b', e.target.value)} required />
                 </div>
               </div>
             )}
@@ -275,41 +277,23 @@ export default function SolverPage() {
             {['secant', 'euler', 'modified-euler', 'rk4'].includes(method) && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="input-group">
-                  <label className="input-label">{['euler', 'modified-euler', 'rk4'].includes(method) ? 'x0' : 'Initial guess x0'}</label>
-                  <input
-                    type="number"
-                    step="any"
-                    className="input-field"
-                    value={params.x0}
-                    onChange={(e) => handleInputChange('x0', e.target.value)}
-                    required
-                  />
+                  <label className="input-label">{['euler', 'modified-euler', 'rk4'].includes(method) ? 'x₀' : 'Initial guess x₀'}</label>
+                  <input type="number" step="any" className="input-field" value={params.x0}
+                    onChange={e => handleInputChange('x0', e.target.value)} required />
                 </div>
                 <div className="input-group">
-                  <label className="input-label">{['euler', 'modified-euler', 'rk4'].includes(method) ? 'y0' : 'Initial guess x1'}</label>
-                  <input
-                    type="number"
-                    step="any"
-                    className="input-field"
-                    value={params.x1}
-                    onChange={(e) => handleInputChange('x1', e.target.value)}
-                    required
-                  />
+                  <label className="input-label">{['euler', 'modified-euler', 'rk4'].includes(method) ? 'y₀' : 'Initial guess x₁'}</label>
+                  <input type="number" step="any" className="input-field" value={params.x1}
+                    onChange={e => handleInputChange('x1', e.target.value)} required />
                 </div>
               </div>
             )}
 
             {['newton-raphson', 'generalized-newton'].includes(method) && (
               <div className="input-group">
-                <label className="input-label">Initial Guess (x0)</label>
-                <input
-                  type="number"
-                  step="any"
-                  className="input-field"
-                  value={params.x0}
-                  onChange={(e) => handleInputChange('x0', e.target.value)}
-                  required
-                />
+                <label className="input-label">Initial Guess (x₀)</label>
+                <input type="number" step="any" className="input-field" value={params.x0}
+                  onChange={e => handleInputChange('x0', e.target.value)} required />
               </div>
             )}
 
@@ -317,24 +301,13 @@ export default function SolverPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="input-group">
                   <label className="input-label">Step size (h)</label>
-                  <input
-                    type="number"
-                    step="any"
-                    className="input-field"
-                    value={params.h}
-                    onChange={(e) => handleInputChange('h', e.target.value)}
-                    required
-                  />
+                  <input type="number" step="any" className="input-field" value={params.h}
+                    onChange={e => handleInputChange('h', e.target.value)} required />
                 </div>
                 <div className="input-group">
                   <label className="input-label">Steps Count</label>
-                  <input
-                    type="number"
-                    className="input-field"
-                    value={params.steps_count}
-                    onChange={(e) => handleInputChange('steps_count', e.target.value)}
-                    required
-                  />
+                  <input type="number" className="input-field" value={params.steps_count}
+                    onChange={e => handleInputChange('steps_count', e.target.value)} required />
                 </div>
               </div>
             )}
@@ -342,13 +315,8 @@ export default function SolverPage() {
             {['trapezoidal', 'simpson-13', 'simpson-38'].includes(method) && (
               <div className="input-group">
                 <label className="input-label">Subintervals (n)</label>
-                <input
-                  type="number"
-                  className="input-field"
-                  value={params.n}
-                  onChange={(e) => handleInputChange('n', e.target.value)}
-                  required
-                />
+                <input type="number" className="input-field" value={params.n}
+                  onChange={e => handleInputChange('n', e.target.value)} required />
               </div>
             )}
 
@@ -356,24 +324,13 @@ export default function SolverPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="input-group">
                   <label className="input-label">Tolerance</label>
-                  <input
-                    type="number"
-                    step="any"
-                    className="input-field"
-                    value={params.tol}
-                    onChange={(e) => handleInputChange('tol', e.target.value)}
-                    required
-                  />
+                  <input type="number" step="any" className="input-field" value={params.tol}
+                    onChange={e => handleInputChange('tol', e.target.value)} required />
                 </div>
                 <div className="input-group">
                   <label className="input-label">Max Iter</label>
-                  <input
-                    type="number"
-                    className="input-field"
-                    value={params.max_iter}
-                    onChange={(e) => handleInputChange('max_iter', e.target.value)}
-                    required
-                  />
+                  <input type="number" className="input-field" value={params.max_iter}
+                    onChange={e => handleInputChange('max_iter', e.target.value)} required />
                 </div>
               </div>
             )}
@@ -395,7 +352,6 @@ export default function SolverPage() {
 
           {result ? (
             <div>
-              {/* Highlighted Result Banner */}
               <div style={{ padding: '1.5rem', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 'var(--radius-lg)', marginBottom: '2rem' }}>
                 <h3 style={{ fontSize: '1rem', color: 'var(--accent-color)', marginBottom: '0.25rem' }}>Final Solution</h3>
                 <div style={{ fontSize: '1.75rem', fontWeight: '700', color: 'var(--primary-color)' }}>
@@ -410,33 +366,20 @@ export default function SolverPage() {
                     </div>
                   ) : null}
                 </div>
-                <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
-                  {result.message}
-                </p>
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>{result.message}</p>
               </div>
 
-              {/* Table or iterations */}
               {result.steps && result.steps.length > 0 && (
                 <div>
                   <h3 style={{ fontSize: '1.25rem', marginBottom: '0.75rem' }}>Step-by-step Iteration Details</h3>
                   <div className="table-container">
                     <table>
-                      <thead>
-                        <tr>
-                          {Object.keys(result.steps[0]).map((key) => (
-                            <th key={key}>{key.charAt(0).toUpperCase() + key.slice(1)}</th>
-                          ))}
-                        </tr>
-                      </thead>
+                      <thead><tr>{Object.keys(result.steps[0]).map(key => <th key={key}>{key.charAt(0).toUpperCase() + key.slice(1)}</th>)}</tr></thead>
                       <tbody>
                         {result.steps.map((step: any, idx: number) => (
-                          <tr key={idx}>
-                            {Object.values(step).map((val: any, sIdx) => (
-                              <td key={sIdx}>
-                                {typeof val === 'number' ? val.toFixed(6) : String(val)}
-                              </td>
-                            ))}
-                          </tr>
+                          <tr key={idx}>{Object.values(step).map((val: any, sIdx) => (
+                            <td key={sIdx}>{typeof val === 'number' ? val.toFixed(6) : String(val)}</td>
+                          ))}</tr>
                         ))}
                       </tbody>
                     </table>
@@ -444,26 +387,15 @@ export default function SolverPage() {
                 </div>
               )}
 
-              {/* Integration value tables */}
               {result.table && (
                 <div style={{ marginTop: '2rem' }}>
                   <h3 style={{ fontSize: '1.25rem', marginBottom: '0.75rem' }}>Computed Value Points</h3>
                   <div className="table-container">
                     <table>
-                      <thead>
-                        <tr>
-                          <th>Index (i)</th>
-                          <th>x</th>
-                          <th>y</th>
-                        </tr>
-                      </thead>
+                      <thead><tr><th>Index (i)</th><th>x</th><th>y</th></tr></thead>
                       <tbody>
                         {result.table.map((row: any, idx: number) => (
-                          <tr key={idx}>
-                            <td>{row.i}</td>
-                            <td>{row.x.toFixed(6)}</td>
-                            <td>{row.y.toFixed(6)}</td>
-                          </tr>
+                          <tr key={idx}><td>{row.i}</td><td>{row.x.toFixed(6)}</td><td>{row.y.toFixed(6)}</td></tr>
                         ))}
                       </tbody>
                     </table>
@@ -471,7 +403,6 @@ export default function SolverPage() {
                 </div>
               )}
 
-              {/* Integration calculation steps */}
               {result.calculation_steps && (
                 <div style={{ marginTop: '2rem' }}>
                   <h3 style={{ fontSize: '1.25rem', marginBottom: '0.75rem' }}>Calculation Steps</h3>
@@ -490,11 +421,19 @@ export default function SolverPage() {
             </div>
           ) : (
             <div style={{ border: '2px dashed var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '4rem 2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-              Configure parameters on the left and click "Solve" to calculate the solution step-by-step.
+              Configure parameters on the left and click &quot;Solve&quot; to calculate the solution step-by-step.
             </div>
           )}
         </section>
       </div>
     </div>
+  );
+}
+
+export default function SolverPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: '2rem', color: 'var(--text-secondary)' }}>Loading solver…</div>}>
+      <SolverContent />
+    </Suspense>
   );
 }

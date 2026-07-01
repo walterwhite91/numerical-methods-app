@@ -21,6 +21,7 @@ export default function RootLayout({
               <a href="/" style={{ color: 'var(--border-color)' }}>Home</a>
               <a href="/methods" style={{ color: 'var(--border-color)' }}>Method Explorer</a>
               <a href="/solver" style={{ color: 'var(--border-color)' }}>Problem Solver</a>
+              <a href="/past-qna" style={{ color: 'var(--border-color)' }}>Past Q&amp;As</a>
             </nav>
           </aside>
           <main className="main-content">

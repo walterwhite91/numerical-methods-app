@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
@@ -24,6 +24,8 @@ from methods.gauss_jacobi import gauss_jacobi
 from methods.gauss_seidel import gauss_seidel
 from methods.absolute_relative_error import absolute_relative_error
 from methods.truncation_error import truncation_error
+from methods.past_qna import get_all_questions, get_chapters_summary
+from methods.solver_params_extractor import extract_solver_params
 
 app = FastAPI(title="Numerical Methods API", description="Educational API for numerical methods — MCSC 202")
 
@@ -106,3 +108,49 @@ def solve_integration(req: IntegrationRequest):
         return numerical_integration_simpson_38(req.func_str, req.a, req.b, req.n)
     else:
         return {"success": False, "message": "Unknown integration method"}
+
+
+# ─── Past Q&As ────────────────────────────────────────────────────────────────
+
+@app.get("/api/past-qna/chapters")
+def list_chapters():
+    """Return all chapter names with question counts and icons."""
+    return {"success": True, "chapters": get_chapters_summary()}
+
+
+@app.get("/api/past-qna")
+def list_questions(chapter: Optional[str] = Query(default=None, description="Filter by chapter name")):
+    """Return all past exam questions, optionally filtered by chapter."""
+    questions = get_all_questions(chapter=chapter)
+    return {
+        "success": True,
+        "total": len(questions),
+        "chapter_filter": chapter,
+        "questions": questions,
+    }
+
+
+@app.get("/api/past-qna/{question_id}/solver-params")
+def get_solver_params(question_id: int):
+    """
+    Extract pre-filled solver parameters from a specific past exam question.
+    Returns a dict of params ready to be passed to the solver frontend.
+    """
+    all_qs = get_all_questions()
+    # question_id is the original index
+    matches = [q for q in all_qs if q["id"] == question_id]
+    if not matches:
+        return {"success": False, "message": f"Question {question_id} not found."}
+
+    q = matches[0]
+    if not q.get("solvable") or not q.get("solver_method"):
+        return {"success": False, "message": "This question is not linked to a solver method."}
+
+    params = extract_solver_params(q["question"], q["solver_method"])
+    return {
+        "success": True,
+        "question_id": question_id,
+        "solver_method": q["solver_method"],
+        "solver_category": q["solver_category"],
+        "params": params,
+    }

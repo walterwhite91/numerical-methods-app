@@ -37,6 +37,21 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section style={{ backgroundColor: 'white', border: '1px solid #3b82f6', borderRadius: 'var(--radius-lg)', padding: '2rem', marginBottom: '2rem', background: 'linear-gradient(135deg, #eff6ff, #dbeafe)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '2.5rem' }}>📚</span>
+          <div style={{ flex: 1 }}>
+            <h2 style={{ fontSize: '1.4rem', marginBottom: '0.4rem' }}>Past Q&amp;As — Exam Preparation</h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: 0, fontSize: '0.95rem' }}>
+              Browse 264 past exam questions organised by chapter. Reveal answers, read guided explanations (beginner &amp; intermediate), and jump to the Problem Solver for computational questions.
+            </p>
+          </div>
+          <a href="/past-qna" className="btn btn-primary" style={{ color: 'white', flexShrink: 0 }}>
+            Browse Past Q&amp;As →
+          </a>
+        </div>
+      </section>
+
       <section style={{ backgroundColor: 'white', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '2rem', textAlign: 'center' }}>
         <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Ready to solve a problem?</h2>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', maxWidth: '500px', margin: '0 auto 1.5rem' }}>
