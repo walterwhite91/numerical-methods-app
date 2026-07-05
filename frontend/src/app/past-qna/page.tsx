@@ -180,8 +180,8 @@ function QuestionCard({ q, index }: { q: PastQuestion; index: number }) {
         </div>
       )}
 
-      {/* Long-form notice */}
-      {q.marks > 1 && (
+      {/* Question type notice */}
+      {(!q.options || q.options.length === 0) && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: '0.5rem',
           padding: '0.6rem 0.9rem', background: '#fafafa',
@@ -189,7 +189,9 @@ function QuestionCard({ q, index }: { q: PastQuestion; index: number }) {
           marginBottom: '0.85rem', fontSize: '0.82rem', color: '#64748b',
         }}>
           <Icons.FileText />
-          <span><strong>Long-form</strong> — carries {q.marks} marks, requires a detailed written solution.</span>
+          <span>
+            <strong>{q.marks > 2 ? 'Long-form' : 'Short-form'}</strong> — carries {q.marks} {q.marks === 1 ? 'mark' : 'marks'}, requires {q.marks > 2 ? 'a detailed written solution' : 'a brief calculation or response'}.
+          </span>
         </div>
       )}
 
@@ -254,16 +256,18 @@ function QuestionCard({ q, index }: { q: PastQuestion; index: number }) {
 
 // ─── Chapter Panel ─────────────────────────────────────────────────────────────
 function ChapterPanel({ questions }: { questions: PastQuestion[] }) {
-  const [filter, setFilter] = useState<'all' | 'mcq' | 'long'>('all');
+  const [filter, setFilter] = useState<'all' | 'mcq' | 'short' | 'long'>('all');
 
   const filtered = useMemo(() => {
-    if (filter === 'mcq') return questions.filter(q => q.marks <= 1);
-    if (filter === 'long') return questions.filter(q => q.marks > 1);
+    if (filter === 'mcq') return questions.filter(q => q.options && q.options.length > 0);
+    if (filter === 'short') return questions.filter(q => (!q.options || q.options.length === 0) && q.marks <= 2);
+    if (filter === 'long') return questions.filter(q => q.marks > 2);
     return questions;
   }, [questions, filter]);
 
-  const mcqCount = questions.filter(q => q.marks <= 1).length;
-  const longCount = questions.filter(q => q.marks > 1).length;
+  const mcqCount = questions.filter(q => q.options && q.options.length > 0).length;
+  const shortCount = questions.filter(q => (!q.options || q.options.length === 0) && q.marks <= 2).length;
+  const longCount = questions.filter(q => q.marks > 2).length;
   const solvable = questions.filter(q => q.solvable).length;
 
   return (
@@ -276,7 +280,8 @@ function ChapterPanel({ questions }: { questions: PastQuestion[] }) {
       }}>
         {[
           { label: 'Total', value: questions.length, color: '#0f172a' },
-          { label: 'MCQ / Short', value: mcqCount, color: '#2563eb' },
+          { label: 'MCQ', value: mcqCount, color: '#2563eb' },
+          { label: 'Short-form', value: shortCount, color: '#7c3aed' },
           { label: 'Long-form', value: longCount, color: '#16a34a' },
           { label: 'Solvable', value: solvable, color: '#d97706' },
         ].map(s => (
@@ -287,7 +292,7 @@ function ChapterPanel({ questions }: { questions: PastQuestion[] }) {
         ))}
         <div style={{ flex: 1 }} />
         <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
-          {(['all', 'mcq', 'long'] as const).map(f => (
+          {(['all', 'mcq', 'short', 'long'] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)} style={{
               padding: '0.28rem 0.7rem', borderRadius: '0.4rem', fontSize: '0.76rem',
               fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s',
@@ -295,7 +300,7 @@ function ChapterPanel({ questions }: { questions: PastQuestion[] }) {
               color: filter === f ? 'white' : '#64748b',
               border: `1px solid ${filter === f ? '#0f172a' : '#e2e8f0'}`,
             }}>
-              {f === 'all' ? 'All' : f === 'mcq' ? 'MCQ / Short' : 'Long-form'}
+              {f === 'all' ? 'All' : f === 'mcq' ? 'MCQs' : f === 'short' ? 'Short-form' : 'Long-form'}
             </button>
           ))}
         </div>
