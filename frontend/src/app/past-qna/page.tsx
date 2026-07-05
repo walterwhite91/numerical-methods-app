@@ -429,10 +429,9 @@ export default function PastQnAPage() {
         />
       </div>
 
-      <div style={{ display: 'flex', gap: '1.4rem', alignItems: 'flex-start' }}>
+      <div className="qna-layout">
         {/* Chapter sidebar */}
-        <nav style={{
-          width: '235px', flexShrink: 0, position: 'sticky', top: '1rem',
+        <nav className="qna-sidebar" style={{
           background: 'white', border: '1px solid #e2e8f0',
           borderRadius: '1rem', padding: '0.65rem',
         }}>

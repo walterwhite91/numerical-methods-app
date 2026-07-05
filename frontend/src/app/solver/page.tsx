@@ -179,7 +179,7 @@ function SolverContent() {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr', gap: '2rem' }}>
+      <div className="solver-grid">
         {/* Input Panel */}
         <section>
           <form onSubmit={handleSolve} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -219,7 +219,7 @@ function SolverContent() {
             )}
 
             {method === 'error-calculation' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="form-row">
                 <div className="input-group">
                   <label className="input-label">True Value (X)</label>
                   <input type="number" step="any" className="input-field" value={params.true_val}
@@ -260,7 +260,7 @@ function SolverContent() {
             )}
 
             {['bisection', 'false-position', 'trapezoidal', 'simpson-13', 'simpson-38'].includes(method) && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="form-row">
                 <div className="input-group">
                   <label className="input-label">Lower bound (a)</label>
                   <input type="number" step="any" className="input-field" value={params.a}
@@ -275,7 +275,7 @@ function SolverContent() {
             )}
 
             {['secant', 'euler', 'modified-euler', 'rk4'].includes(method) && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="form-row">
                 <div className="input-group">
                   <label className="input-label">{['euler', 'modified-euler', 'rk4'].includes(method) ? 'x₀' : 'Initial guess x₀'}</label>
                   <input type="number" step="any" className="input-field" value={params.x0}
@@ -298,7 +298,7 @@ function SolverContent() {
             )}
 
             {['euler', 'modified-euler', 'rk4'].includes(method) && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="form-row">
                 <div className="input-group">
                   <label className="input-label">Step size (h)</label>
                   <input type="number" step="any" className="input-field" value={params.h}
@@ -321,7 +321,7 @@ function SolverContent() {
             )}
 
             {['bisection', 'secant', 'false-position', 'newton-raphson', 'generalized-newton'].includes(method) && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="form-row">
                 <div className="input-group">
                   <label className="input-label">Tolerance</label>
                   <input type="number" step="any" className="input-field" value={params.tol}

@@ -5,7 +5,7 @@ export default function HomePage() {
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '1rem' }}>
       <header style={{ marginBottom: '3rem', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '3rem', fontWeight: '700', color: 'var(--primary-color)', marginBottom: '1rem' }}>
+        <h1 style={{ fontSize: 'clamp(2rem, 7vw, 3rem)', fontWeight: '700', color: 'var(--primary-color)', marginBottom: '1rem' }}>
           Numerical Methods Learner
         </h1>
         <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', maxWidth: '600px', margin: '0 auto' }}>

@@ -29,7 +29,7 @@ function MethodExplorerContent() {
   const method = methodsData[selectedMethod];
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '250px 1fr', gap: '2rem', minHeight: '80vh' }}>
+    <div className="two-col-grid" style={{ minHeight: '80vh' }}>
       {/* Local Navigation sidebar */}
       <aside style={{ borderRight: '1px solid var(--border-color)', paddingRight: '1.5rem' }}>
         <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', color: 'var(--primary-color)' }}>Categories</h2>
@@ -112,7 +112,7 @@ function MethodExplorerContent() {
               </ol>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+            <div className="split-grid" style={{ marginBottom: '2rem' }}>
               <div>
                 <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Conditions & Limitations</h2>
                 <ul style={{ paddingLeft: '1.25rem', color: 'var(--text-secondary)' }}>

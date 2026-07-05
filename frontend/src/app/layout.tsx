@@ -15,9 +15,9 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <div className="app-layout">
-          <aside style={{ width: '250px', backgroundColor: 'var(--primary-color)', color: 'white', padding: '2rem' }}>
-            <h2 style={{ color: 'white', fontSize: '1.5rem', marginBottom: '2rem' }}>Numerical Methods</h2>
-            <nav style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <aside className="sidebar-nav" style={{ backgroundColor: 'var(--primary-color)', color: 'white', padding: '2rem' }}>
+            <h2 className="sidebar-title" style={{ color: 'white', fontSize: '1.5rem' }}>Numerical Methods</h2>
+            <nav className="sidebar-nav-links">
               <a href="/" style={{ color: 'var(--border-color)' }}>Home</a>
               <a href="/methods" style={{ color: 'var(--border-color)' }}>Method Explorer</a>
               <a href="/solver" style={{ color: 'var(--border-color)' }}>Problem Solver</a>
