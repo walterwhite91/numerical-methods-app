@@ -11,6 +11,12 @@ frontend/.next/
 frontend/out/
 frontend/build/
 frontend/.env*.local
+frontend/.wrangler/
+
+# Worker
+worker/node_modules/
+worker/.wrangler/
+worker/.dev.vars
 
 # Temporary Compilation Artifacts
 backend/code_compilation.html

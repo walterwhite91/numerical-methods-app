@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "deploy": "wrangler pages deploy out --project-name=numerical-methods-app"
   },
   "dependencies": {
     "katex": "^0.17.0",
@@ -23,6 +24,7 @@
     "@types/react-katex": "^3.0.4",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.107.0"
   }
 }
