@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# generated from /scripts/*.py, see scripts/generate-method-code.mjs
+src/lib/methodCode.generated.ts

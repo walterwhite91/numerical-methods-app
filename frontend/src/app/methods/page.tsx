@@ -3,8 +3,10 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { categories, methodsData } from '@/lib/methodData';
+import { methodCode } from '@/lib/methodCode.generated';
 import MathDisplay from '@/components/MathDisplay';
 import TextWithMath from '@/components/TextWithMath';
+import CodePreview from '@/components/CodePreview';
 
 function MethodExplorerContent() {
   const searchParams = useSearchParams();
@@ -111,6 +113,13 @@ function MethodExplorerContent() {
                 ))}
               </ol>
             </div>
+
+            {methodCode[method.id] && (
+              <div style={{ marginBottom: '2rem' }}>
+                <h2 style={{ fontSize: '1.5rem', marginBottom: '0.75rem' }}>Python Implementation</h2>
+                <CodePreview code={methodCode[method.id]} />
+              </div>
+            )}
 
             <div className="split-grid" style={{ marginBottom: '2rem' }}>
               <div>

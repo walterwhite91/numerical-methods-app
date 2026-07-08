@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "generate:code": "node ../scripts/generate-method-code.mjs",
+    "predev": "npm run generate:code",
     "dev": "next dev",
+    "prebuild": "npm run generate:code",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
