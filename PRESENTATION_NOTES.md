@@ -391,6 +391,36 @@ matching the notes' worked example number-for-number. It converges fully to
 
 # Interpolation
 
+## Example inputs, quick reference
+
+Every script below prompts: number of data points, then x-values, then
+y-values (space separated), then a target x. Press Enter at each prompt to
+use the built-in example. If typing your own, here's what each script's
+default looks like and what a fresh custom run would look like:
+
+| Script | n | x-values | y-values | target x |
+|---|---|---|---|---|
+| `forward-difference.py` | 3 | `1 2 3` | `1 4 9` | `1.5` |
+| `backward-difference.py` | 3 | `1 2 3` | `1 4 9` | `2.5` |
+| `gauss-forward.py` | 5 | `0 1 2 3 4` | `0 1 4 9 16` | `2.25` |
+| `gauss-backward.py` | 5 | `0 1 2 3 4` | `0 1 4 9 16` | `1.75` |
+| `stirling.py` | 5 | `0.10 0.15 0.20 0.25 0.30` | `0.9950 0.9888 0.9801 0.9689 0.9553` | `0.17` |
+| `bessel.py` | 5 | `0 1 2 3 4` | `0 1 4 9 16` | `2.5` |
+| `everett.py` | 5 | `0 1 2 3 4` | `0 1 4 9 16` | `2.5` |
+| `lagrange.py` | 3 | `2 5 8` | `4 25 64` | `6` |
+| `newton-divided-difference.py` | 4 | `300 304 305 307` | `2.4771 2.4829 2.4873 2.4871` | `301` |
+
+Notes: Newton forward/backward, Gauss forward/backward, Stirling, Bessel,
+and Everett all need *equally spaced* x-values (constant `h` between
+points) — that's what the difference-table math assumes. Lagrange and
+Newton's Divided Difference are the two exceptions and accept any
+spacing, e.g. try `2 5 8` (uneven gaps) with Lagrange.
+
+A live demo of typing your own data: run `python3 lagrange.py`, hit
+Enter at the "number of data points" prompt with `4`, then type
+`0 1 3 4` for x-values, `0 1 9 16` for y-values (that's `y = x^2` sampled
+unevenly), then target `2` — should return `4`.
+
 ## Newton's Forward Difference
 
 **Script:** `scripts/forward-difference.py`
@@ -805,6 +835,23 @@ analytic solution after just two steps.
 ---
 
 # Numerical Integration
+
+## Example inputs, quick reference
+
+These three scripts all share the same prompt shape: `f(x)` expression,
+lower limit `a`, upper limit `b`, number of subintervals `n`. Enter for
+each uses the built-in `x**2` on `[0, 1]` example; `n`'s default differs
+per method since each has a different divisibility requirement.
+
+| Script | f(x) | a | b | n | n constraint |
+|---|---|---|---|---|---|
+| `trapezoidal.py` | `x**2` | `0` | `1` | `4` | any positive integer |
+| `simpson-13.py` | `x**2` | `0` | `1` | `4` | must be even |
+| `simpson-38.py` | `x**2` | `0` | `1` | `3` | must be multiple of 3 |
+
+A custom run to try live: `python3 simpson-13.py`, type `sin(x)` for
+`f(x)`, `0` for `a`, `3.14159` for `b`, `10` for `n` — approximates
+`∫sin(x)dx` from `0` to `π`, should land close to the exact value `2`.
 
 ## Trapezoidal Rule
 

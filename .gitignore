@@ -28,3 +28,6 @@ backend/code_compilation.html
 
 # Course Reference Material
 *Book.pdf
+
+# Wrangler cache
+.wrangler/

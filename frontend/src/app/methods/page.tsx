@@ -117,7 +117,46 @@ function MethodExplorerContent() {
             {methodCode[method.id] && (
               <div style={{ marginBottom: '2rem' }}>
                 <h2 style={{ fontSize: '1.5rem', marginBottom: '0.75rem' }}>Python Implementation</h2>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.75rem' }}>
+                  Self-contained — only uses Python&apos;s standard library. Copy this into a
+                  <code style={{ margin: '0 0.25rem' }}>.py</code>
+                  file on any machine with Python 3 installed and run it with <code>python3 filename.py</code>.
+                </p>
                 <CodePreview code={methodCode[method.id]} />
+
+                {method.exampleInput && (
+                  <div style={{ marginTop: '1rem' }}>
+                    <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>Example Input</h3>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
+                      Running the script prompts for each value below in order. Press Enter at
+                      every prompt to use these defaults (the same worked example from the notes),
+                      or type your own values instead.
+                    </p>
+                    <div
+                      style={{
+                        border: '1px solid var(--border-color)',
+                        borderRadius: 'var(--radius-lg)',
+                        backgroundColor: '#0f172a',
+                        padding: '1rem',
+                        fontFamily: 'var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace)',
+                        fontSize: '0.85rem',
+                        color: '#e2e8f0',
+                      }}
+                    >
+                      {method.exampleInput.map((line, idx) => {
+                        const sepIdx = line.indexOf(': ');
+                        const prompt = sepIdx === -1 ? line : line.slice(0, sepIdx);
+                        const value = sepIdx === -1 ? '' : line.slice(sepIdx + 2);
+                        return (
+                          <div key={idx} style={{ display: 'flex', gap: '0.5rem', padding: '0.15rem 0' }}>
+                            <span style={{ color: '#94a3b8' }}>{prompt}:</span>
+                            <span style={{ color: '#4ade80', fontWeight: 600 }}>{value}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

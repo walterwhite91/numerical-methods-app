@@ -197,6 +197,26 @@ tr:hover td {
 .sidebar-nav {
   width: 250px;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 2rem;
+}
+
+.sidebar-footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--border-color);
+  font-size: 0.9rem;
+  word-break: break-word;
+}
+
+.sidebar-footer a:hover {
+  color: white;
 }
 
 .sidebar-title {
@@ -267,6 +287,11 @@ tr:hover td {
     flex-direction: row;
     flex-wrap: wrap;
     gap: 1rem 1.5rem;
+  }
+
+  .sidebar-footer {
+    margin-top: 1rem;
+    padding-top: 0;
   }
 
   .main-content {

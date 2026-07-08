@@ -11,6 +11,9 @@ export interface MethodInfo {
     problem: string;
     solution: string;
   };
+  // Prompt/value pairs matching the script's input() prompts, in order,
+  // for methods that have a runnable Python implementation in /scripts.
+  exampleInput?: string[];
 }
 
 export const categories = [
@@ -50,7 +53,11 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Find absolute and relative error if true value $X = 3.141592$ is approximated by $X_1 = 3.14$.",
       solution: "$E_A = 0.001592$, $E_R = 0.0005067$."
-    }
+    },
+    exampleInput: [
+      "True value X: 3.141592",
+      "Approximate value X1: 3.14"
+    ]
   },
   "general-error-formula": {
     id: "general-error-formula",
@@ -75,7 +82,12 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "For $u = f(n_1, n_2, n_3)$, bound the maximum error given individual errors $\\Delta n_1, \\Delta n_2, \\Delta n_3$.",
       solution: "$(\\Delta u)_{max} \\leq \\left|\\Delta n_1 \\frac{\\partial f}{\\partial n_1}\\right| + \\left|\\Delta n_2 \\frac{\\partial f}{\\partial n_2}\\right| + \\left|\\Delta n_3 \\frac{\\partial f}{\\partial n_3}\\right|$."
-    }
+    },
+    exampleInput: [
+      "u(n1,n2,n3): (n1 * n2) / n3",
+      "n1, n2, n3: 10 4 2",
+      "delta_n1, delta_n2, delta_n3: 0.1 0.05 0.02"
+    ]
   },
   "division-error": {
     id: "division-error",
@@ -195,7 +207,13 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Find a root of $f(x) = x^3 - x - 1$ in $[1, 2]$ with tolerance $10^{-4}$.",
       solution: "The root converges to approximately $1.3247$ after 14 iterations."
-    }
+    },
+    exampleInput: [
+      "f(x): x**3 - x - 1",
+      "a: 1",
+      "b: 2",
+      "tolerance: 1e-4"
+    ]
   },
   "secant": {
     id: "secant",
@@ -222,7 +240,13 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Solve $x^3 - x - 1 = 0$ starting with $x_0 = 1$, $x_1 = 2$.",
       solution: "Root converges to $1.3247$."
-    }
+    },
+    exampleInput: [
+      "f(x): x**3 - x - 1",
+      "x0: 1",
+      "x1: 2",
+      "tolerance: 1e-6"
+    ]
   },
   "false-position": {
     id: "false-position",
@@ -248,7 +272,13 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Solve $x^3 - x - 1 = 0$ in $[1, 2]$.",
       solution: "Root converges to $1.3247$."
-    }
+    },
+    exampleInput: [
+      "f(x): x**3 - x - 1",
+      "a: 1",
+      "b: 2",
+      "tolerance: 1e-6"
+    ]
   },
   "newton-raphson": {
     id: "newton-raphson",
@@ -273,7 +303,13 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Solve $x^3 - x - 1 = 0$ with $x_0 = 1.5$.",
       solution: "Root converges to $1.3247$."
-    }
+    },
+    exampleInput: [
+      "f(x): x**3 - x - 1",
+      "f'(x): 3*x**2 - 1",
+      "initial guess x0: 1.5",
+      "tolerance: 1e-6"
+    ]
   },
   "generalized-newton": {
     id: "generalized-newton",
@@ -298,7 +334,14 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Solve $(x-1)^2(x+2) = 0$ which has a double root at x=1.",
       solution: "Generalized Newton with m=2 converges quadratically to $1.0$."
-    }
+    },
+    exampleInput: [
+      "f(x): (x-1)**2 * (x+2)",
+      "f'(x): 2*(x-1)*(x+2) + (x-1)**2",
+      "initial guess x0: 1.5",
+      "known root multiplicity m: 2",
+      "tolerance: 1e-6"
+    ]
   },
   "fixed-point-iteration": {
     id: "fixed-point-iteration",
@@ -347,7 +390,14 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Solve $x = \\frac{xy + 1}{2}$, $y = \\frac{x^2 - 3}{y}$.",
       solution: "Evaluates step by step to find fixed points."
-    }
+    },
+    exampleInput: [
+      "Phi(x,y): (y**2 + 4) / 5",
+      "Psi(x,y): (3*y*x**2 + 7) / 10",
+      "initial guess x0: 0",
+      "initial guess y0: 0",
+      "tolerance: 1e-4"
+    ]
   },
   "newton-system": {
     id: "newton-system",
@@ -371,7 +421,17 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Solve $y^2 - 5y + 4 = 0$, $3x^2y - 10x + 7 = 0$ starting at $(0,0)$.",
       solution: "$h = 0.7$, $k = 0.8 \\Rightarrow x_1 = 0.7$, $y_1 = 0.8$."
-    }
+    },
+    exampleInput: [
+      "f(x,y): y**2 - 5*y + 4",
+      "g(x,y): 3*x**2*y - 10*x + 7",
+      "df/dx: 0",
+      "df/dy: 2*y - 5",
+      "dg/dx: 6*x*y - 10",
+      "dg/dy: 3*x**2",
+      "initial guess x0: 0",
+      "initial guess y0: 0"
+    ]
   },
 
   // Interpolation
@@ -396,7 +456,13 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Find $y$ at $x=1.5$ given table: $x=[1, 2, 3]$, $y=[1, 4, 9]$.",
       solution: "Using Forward difference, $y = 2.25$."
-    }
+    },
+    exampleInput: [
+      "number of data points: 3",
+      "x-values: 1 2 3",
+      "y-values: 1 4 9",
+      "target x: 1.5"
+    ]
   },
   "backward-difference": {
     id: "backward-difference",
@@ -419,7 +485,13 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Find $y$ at $x=2.5$ given $x=[1, 2, 3]$, $y=[1, 4, 9]$.",
       solution: "Using Backward difference, $y = 6.25$."
-    }
+    },
+    exampleInput: [
+      "number of data points: 3",
+      "x-values: 1 2 3",
+      "y-values: 1 4 9",
+      "target x: 2.5"
+    ]
   },
   "gauss-forward": {
     id: "gauss-forward",
@@ -443,7 +515,13 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Interpolate $y_p$ using differences centered around $y_0$ with $p = \\frac{x - x_0}{h}$.",
       solution: "Apply the Gauss Forward formula term by term using the difference table's central diagonal."
-    }
+    },
+    exampleInput: [
+      "number of data points: 5",
+      "x-values: 0 1 2 3 4",
+      "y-values: 0 1 4 9 16",
+      "target x: 2.25"
+    ]
   },
   "gauss-backward": {
     id: "gauss-backward",
@@ -467,7 +545,13 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Interpolate $y_p$ using the Gauss Backward formula centered around $y_0$.",
       solution: "Apply the formula term by term using the difference table's central diagonal."
-    }
+    },
+    exampleInput: [
+      "number of data points: 5",
+      "x-values: 0 1 2 3 4",
+      "y-values: 0 1 4 9 16",
+      "target x: 1.75"
+    ]
   },
   "stirling": {
     id: "stirling",
@@ -491,7 +575,13 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Estimate $\\cos(0.17)$ from a table of $\\cos(x)$ at $x = 0.10, 0.15, 0.20, 0.25, 0.30$.",
       solution: "Using Stirling's formula centered at $x_0 = 0.15$: result approx $0.9856$."
-    }
+    },
+    exampleInput: [
+      "number of data points: 5",
+      "x-values: 0.10 0.15 0.20 0.25 0.30",
+      "y-values: 0.9950 0.9888 0.9801 0.9689 0.9553",
+      "target x: 0.17"
+    ]
   },
   "bessel": {
     id: "bessel",
@@ -515,7 +605,13 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Interpolate $y_p$ for a target roughly midway between $x_0$ and $x_1$.",
       solution: "Apply Bessel's formula term by term using differences straddling the $y_0$-$y_1$ interval."
-    }
+    },
+    exampleInput: [
+      "number of data points: 5",
+      "x-values: 0 1 2 3 4",
+      "y-values: 0 1 4 9 16",
+      "target x: 2.5"
+    ]
   },
   "everett": {
     id: "everett",
@@ -540,7 +636,13 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Interpolate $y_p$ for a target between $x_0$ and $x_1$ using only even-order differences.",
       solution: "Apply Everett's formula, combining the $q y_0$-side and $p y_1$-side sums."
-    }
+    },
+    exampleInput: [
+      "number of data points: 5",
+      "x-values: 0 1 2 3 4",
+      "y-values: 0 1 4 9 16",
+      "target x: 2.5"
+    ]
   },
   "lagrange": {
     id: "lagrange",
@@ -563,7 +665,13 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Linear interpolation ($n=1$) between two points $(x_0, y_0)$ and $(x_1, y_1)$.",
       solution: "$y = y_0 \\frac{x-x_1}{x_0-x_1} + y_1 \\frac{x-x_0}{x_1-x_0}$."
-    }
+    },
+    exampleInput: [
+      "number of data points: 3",
+      "x-values: 2 5 8",
+      "y-values: 4 25 64",
+      "target x: 6"
+    ]
   },
   "newton-divided-difference": {
     id: "newton-divided-difference",
@@ -585,7 +693,13 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Find $f(301)$ from data $(300, 2.4771), (304, 2.4829), (305, 2.4873), (307, 2.4871)$.",
       solution: "$y \\approx 2.4771 + (301-300)(0.00145) = 2.4796$."
-    }
+    },
+    exampleInput: [
+      "number of data points: 4",
+      "x-values: 300 304 305 307",
+      "y-values: 2.4771 2.4829 2.4873 2.4871",
+      "target x: 301"
+    ]
   },
 
   // Numerical Differentiation
@@ -661,7 +775,14 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Solve $\\frac{dy}{dx} = x + y$ with $x_0=0$, $y_0=1$, $h=0.1$ to find $y(0.2)$.",
       solution: "Iteration 1: $y(0.1) = 1.1$. Iteration 2: $y(0.2) = 1.22$."
-    }
+    },
+    exampleInput: [
+      "dy/dx = f(x,y): x + y",
+      "x0: 0",
+      "y0: 1",
+      "step size h: 0.1",
+      "number of steps: 2"
+    ]
   },
   "modified-euler": {
     id: "modified-euler",
@@ -683,7 +804,14 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Solve $\\frac{dy}{dx} = x + y$ with $x_0=0$, $y_0=1$, $h=0.1$.",
       solution: "Step 1: Predict $y^*(0.1)=1.1$, Correct $y(0.1)=1.11$."
-    }
+    },
+    exampleInput: [
+      "dy/dx = f(x,y): x + y",
+      "x0: 0",
+      "y0: 1",
+      "step size h: 0.1",
+      "number of steps: 2"
+    ]
   },
   "rk4": {
     id: "rk4",
@@ -707,7 +835,14 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Solve $\\frac{dy}{dx} = x + y$ with $x_0=0$, $y_0=1$, $h=0.1$.",
       solution: "Converges with high accuracy $O(h^4)$."
-    }
+    },
+    exampleInput: [
+      "dy/dx = f(x,y): x + y",
+      "x0: 0",
+      "y0: 1",
+      "step size h: 0.1",
+      "number of steps: 2"
+    ]
   },
   "rk2": {
     id: "rk2",
@@ -803,7 +938,13 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Integrate $x^2$ from $0$ to $1$ with $n=4$.",
       solution: "Integral value $\\approx 0.34375$ (Analytical value: $0.3333$)"
-    }
+    },
+    exampleInput: [
+      "f(x): x**2",
+      "lower limit a: 0",
+      "upper limit b: 1",
+      "subintervals n: 4"
+    ]
   },
   "simpson-13": {
     id: "simpson-13",
@@ -826,7 +967,13 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Integrate $x^2$ from $0$ to $1$ with $n=4$.",
       solution: "Integral value $= 0.33333$."
-    }
+    },
+    exampleInput: [
+      "f(x): x**2",
+      "lower limit a: 0",
+      "upper limit b: 1",
+      "subintervals n (must be even): 4"
+    ]
   },
   "simpson-38": {
     id: "simpson-38",
@@ -849,7 +996,13 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Integrate $x^2$ from $0$ to $1$ with $n=3$.",
       solution: "Integral value $= 0.33333$."
-    }
+    },
+    exampleInput: [
+      "f(x): x**2",
+      "lower limit a: 0",
+      "upper limit b: 1",
+      "subintervals n (multiple of 3): 3"
+    ]
   },
   "double-integration": {
     id: "double-integration",
@@ -925,7 +1078,14 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Solve $Ax = b$ given $A = [[2, 3], [1, 4]]$.",
       solution: "Finds $L$ and $U$ and solves exactly."
-    }
+    },
+    exampleInput: [
+      "matrix size n: 3",
+      "row 1 of A: 2 3 1",
+      "row 2 of A: 1 2 3",
+      "row 3 of A: 3 1 2",
+      "b: 9 6 8"
+    ]
   },
   "thomas-algorithm": {
     id: "thomas-algorithm",
@@ -946,7 +1106,14 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Solve a tridiagonal system arising from 1D finite differences.",
       solution: "Calculates the solution vector linearly."
-    }
+    },
+    exampleInput: [
+      "number of equations n: 3",
+      "sub-diagonal a: 0 -1 -1",
+      "main diagonal b: 2 2 2",
+      "super-diagonal c: -1 -1 0",
+      "right-hand side d: 1 0 1"
+    ]
   },
   "gauss-jacobi": {
     id: "gauss-jacobi",
@@ -969,7 +1136,15 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Solve a diagonally dominant system iteratively.",
       solution: "Converges to the solution vector within a specified tolerance."
-    }
+    },
+    exampleInput: [
+      "number of equations n: 3",
+      "row 1 of A: 2 -1 0",
+      "row 2 of A: -1 3 -1",
+      "row 3 of A: 0 -1 2",
+      "b: 1 8 -5",
+      "initial guess x0: 0 0 0"
+    ]
   },
   "gauss-seidel": {
     id: "gauss-seidel",
@@ -992,7 +1167,15 @@ export const methodsData: Record<string, MethodInfo> = {
     example: {
       problem: "Solve a diagonally dominant system iteratively.",
       solution: "Converges roughly twice as fast as Jacobi."
-    }
+    },
+    exampleInput: [
+      "number of equations n: 3",
+      "row 1 of A: 2 -1 0",
+      "row 2 of A: -1 3 -1",
+      "row 3 of A: 0 -1 2",
+      "b: 1 8 -5",
+      "initial guess x0: 0 0 0"
+    ]
   },
   "matrix-norms": {
     id: "matrix-norms",
