@@ -12,10 +12,20 @@ difference formula, rather than worked out by hand -- so this script
 also doubles as a tiny demo of numerical differentiation.
 """
 
+import math
 
-def u(n1, n2, n3):
-    # Example: u = (n1 * n2) / n3
-    return (n1 * n2) / n3
+
+def make_function_n(expr):
+    """
+    Turns a typed expression using n1, n2, n3 (e.g. "(n1 * n2) / n3")
+    into a callable u(n1, n2, n3).
+    """
+    allowed_names = {k: v for k, v in math.__dict__.items() if not k.startswith("_")}
+
+    def u(n1, n2, n3):
+        return eval(expr, {"__builtins__": {}}, {**allowed_names, "n1": n1, "n2": n2, "n3": n3})
+
+    return u
 
 
 def partial_derivative(func, values, index, h=1e-6):
@@ -51,15 +61,21 @@ def propagated_error(func, values, deltas):
 
 
 if __name__ == "__main__":
-    print("=== General Error Formula: u = (n1 * n2) / n3 ===\n")
+    print("=== General Error Formula (Error Propagation) ===")
+    expr = input("Enter u(n1,n2,n3), e.g. (n1 * n2) / n3 [Enter to use that example]: ").strip() \
+        or "(n1 * n2) / n3"
+    u = make_function_n(expr)
 
-    values = (10.0, 4.0, 2.0)   # n1, n2, n3
-    deltas = (0.1, 0.05, 0.02)  # known error in each input
+    vals_in = input("Enter n1, n2, n3 [Enter for 10, 4, 2]: ").strip()
+    values = tuple(float(v) for v in vals_in.split()) if vals_in else (10.0, 4.0, 2.0)
+
+    deltas_in = input("Enter their errors delta_n1, delta_n2, delta_n3 [Enter for 0.1, 0.05, 0.02]: ").strip()
+    deltas = tuple(float(v) for v in deltas_in.split()) if deltas_in else (0.1, 0.05, 0.02)
 
     delta_u, max_delta_u = propagated_error(u, values, deltas)
 
-    print(f"u(n1, n2, n3) = {u(*values):.4f}")
-    print(f"Estimated error contribution per variable:")
+    print(f"\nu(n1, n2, n3) = {u(*values):.4f}")
+    print("Estimated error contribution per variable:")
     for i, (val, delta) in enumerate(zip(values, deltas), start=1):
         df_dni = partial_derivative(u, values, i - 1)
         print(f"  n{i} = {val}, delta_n{i} = {delta}, du/dn{i} approx {df_dni:.4f}, contributes {delta * df_dni:.4f}")

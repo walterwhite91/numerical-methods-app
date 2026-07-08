@@ -40,17 +40,31 @@ def thomas_algorithm(a, b, c, d):
     return x
 
 
+def read_tridiagonal_system():
+    n_in = input("Enter number of equations n [Enter for a 3-equation example]: ").strip()
+    if not n_in:
+        # 2x0 -  x1            = 1
+        # -x0 + 2x1 -  x2       = 0
+        #      -x1 + 2x2       = 1
+        a = [0.0, -1.0, -1.0]
+        b = [2.0, 2.0, 2.0]
+        c = [-1.0, -1.0, 0.0]
+        d = [1.0, 0.0, 1.0]
+        return a, b, c, d
+
+    n = int(n_in)
+    print("Enter each diagonal as space-separated numbers (use 0 for unused end entries):")
+    a = [float(v) for v in input(f"  sub-diagonal a ({n} values): ").strip().split()]
+    b = [float(v) for v in input(f"  main diagonal b ({n} values): ").strip().split()]
+    c = [float(v) for v in input(f"  super-diagonal c ({n} values): ").strip().split()]
+    d = [float(v) for v in input(f"  right-hand side d ({n} values): ").strip().split()]
+    return a, b, c, d
+
+
 if __name__ == "__main__":
-    print("=== Thomas Algorithm: tridiagonal system ===\n")
+    print("=== Thomas Algorithm ===")
+    a, b, c, d = read_tridiagonal_system()
 
-    # 2x0 -  x1            = 1
-    # -x0 + 2x1 -  x2       = 0
-    #      -x1 + 2x2       = 1
-    a = [0.0, -1.0, -1.0]   # sub-diagonal
-    b_diag = [2.0, 2.0, 2.0]  # main diagonal
-    c = [-1.0, -1.0, 0.0]   # super-diagonal
-    d = [1.0, 0.0, 1.0]     # right-hand side
+    x = thomas_algorithm(a, b, c, d)
 
-    x = thomas_algorithm(a, b_diag, c, d)
-
-    print(f"Solution: x = {[round(v, 4) for v in x]} (expected: [1.0, 1.0, 1.0])")
+    print(f"\nSolution: x = {[round(v, 4) for v in x]}")

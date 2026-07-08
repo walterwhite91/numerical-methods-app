@@ -58,22 +58,42 @@ def solve(A, b):
     return L, U, x
 
 
-if __name__ == "__main__":
-    print("=== LU Decomposition: notes' 3x3 system ===\n")
+def read_matrix_and_vector():
+    n_in = input("Enter matrix size n [Enter for the notes' 3x3 example]: ").strip()
+    if not n_in:
+        # From the notes: 2x + 3y + z = 9, x + 2y + 3z = 6, 3x + y + 2z = 8
+        A = [[2.0, 3.0, 1.0], [1.0, 2.0, 3.0], [3.0, 1.0, 2.0]]
+        b = [9.0, 6.0, 8.0]
+        return A, b
 
-    # From the notes: 2x + 3y + z = 9, x + 2y + 3z = 6, 3x + y + 2z = 8
-    A = [[2.0, 3.0, 1.0],
-         [1.0, 2.0, 3.0],
-         [3.0, 1.0, 2.0]]
-    b = [9.0, 6.0, 8.0]
+    n = int(n_in)
+    print(f"Enter each row of A ({n} numbers separated by spaces), one row per line:")
+    A = []
+    for i in range(n):
+        row = input(f"  row {i + 1}: ").strip().split()
+        A.append([float(v) for v in row])
+
+    b_row = input(f"Enter b ({n} numbers separated by spaces): ").strip().split()
+    b = [float(v) for v in b_row]
+    return A, b
+
+
+if __name__ == "__main__":
+    print("=== LU Decomposition ===")
+    A, b = read_matrix_and_vector()
+
+    print("\nA:")
+    for row in A:
+        print(" ", row)
+    print("b:", b)
 
     L, U, x = solve(A, b)
 
-    print("L:")
+    print("\nL:")
     for row in L:
         print(" ", [round(v, 4) for v in row])
     print("U:")
     for row in U:
         print(" ", [round(v, 4) for v in row])
 
-    print(f"\nSolution: x = {x[0]:.4f}, y = {x[1]:.4f}, z = {x[2]:.4f}")
+    print("\nSolution x:", [round(v, 4) for v in x])

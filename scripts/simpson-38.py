@@ -7,13 +7,22 @@ means n must be a multiple of 3. Slightly different weighting pattern
 (3, 3, 2, 3, 3, 2, ...) but similar accuracy to the 1/3 rule.
 """
 
-
-def f(x):
-    return x ** 2
+import math
 
 
-def simpson_38(a, b, n):
+def make_function(expr):
+    """Turns a typed expression like "x**2" into a callable f(x)."""
+    allowed_names = {k: v for k, v in math.__dict__.items() if not k.startswith("_")}
+
+    def f(x):
+        return eval(expr, {"__builtins__": {}}, {**allowed_names, "x": x})
+
+    return f
+
+
+def simpson_38(f, a, b, n):
     """
+    f    : the function to integrate, as a callable f(x)
     a, b : integration limits
     n    : number of subintervals; must be a multiple of 3
     """
@@ -33,10 +42,21 @@ def simpson_38(a, b, n):
 
 
 if __name__ == "__main__":
-    print("=== Simpson's 3/8 Rule: integral of x^2 from 0 to 1, n = 3 ===\n")
+    print("=== Simpson's 3/8 Rule ===")
+    expr = input("Enter f(x), e.g. x**2 [Enter to use that example]: ").strip() or "x**2"
+    f = make_function(expr)
 
-    integral, y, h = simpson_38(0, 1, 3)
+    a_in = input("Enter lower limit a [Enter for 0]: ").strip()
+    a = float(a_in) if a_in else 0.0
+    b_in = input("Enter upper limit b [Enter for 1]: ").strip()
+    b = float(b_in) if b_in else 1.0
+    n_in = input("Enter number of subintervals n, must be a multiple of 3 [Enter for 3]: ").strip()
+    n = int(n_in) if n_in else 3
+
+    print(f"\n=== Integrating f(x) = {expr}  from {a} to {b},  n = {n} ===\n")
+
+    integral, y, h = simpson_38(f, a, b, n)
 
     print(f"h = {h}")
     print("y values:", [round(v, 4) for v in y])
-    print(f"\nIntegral approx {integral:.5f} (exact value: 1/3 approx 0.33333 -- exact here since x^2 is quadratic)")
+    print(f"\nIntegral approx {integral:.5f}")

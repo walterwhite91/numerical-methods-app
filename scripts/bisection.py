@@ -8,15 +8,24 @@ the interval in half and keeping whichever half still contains the root.
 import math  # only used for the iteration-count estimate at the bottom
 
 
-def f(x):
-    # The example function from class: f(x) = x^3 - x - 1
-    return x ** 3 - x - 1
-
-
-def bisection(a, b, tol=1e-4, max_iter=100):
+def make_function(expr):
     """
-    Run the Bisection Method on f(x) over [a, b].
+    Turns a typed expression like "x**3 - x - 1" into a callable f(x).
+    Only the `math` module's names and `x` itself are reachable from inside
+    the typed expression -- no other Python builtins are available, so this
+    stays safe to eval() even with user-typed input.
+    """
+    allowed_names = {k: v for k, v in math.__dict__.items() if not k.startswith("_")}
 
+    def f(x):
+        return eval(expr, {"__builtins__": {}}, {**allowed_names, "x": x})
+
+    return f
+
+
+def bisection(f, a, b, tol=1e-4, max_iter=100):
+    """
+    f        : the function to find a root of, as a callable f(x)
     a, b     : interval endpoints; f(a) and f(b) must have opposite signs
     tol      : stop once the interval half-width is smaller than this
     max_iter : safety cap so the loop can't run forever
@@ -62,13 +71,24 @@ def iterations_needed(a, b, decimal_places):
 
 
 if __name__ == "__main__":
-    print("=== Bisection Method: f(x) = x^3 - x - 1 on [1, 2] ===\n")
+    print("=== Bisection Method ===")
+    expr = input("Enter f(x), e.g. x**3 - x - 1 [Enter to use that example]: ").strip() or "x**3 - x - 1"
+    f = make_function(expr)
 
-    rows, root = bisection(1, 2, tol=1e-4)
+    a_in = input("Enter a [Enter for 1]: ").strip()
+    a = float(a_in) if a_in else 1.0
+    b_in = input("Enter b [Enter for 2]: ").strip()
+    b = float(b_in) if b_in else 2.0
+    tol_in = input("Enter tolerance [Enter for 1e-4]: ").strip()
+    tol = float(tol_in) if tol_in else 1e-4
+
+    print(f"\n=== Solving f(x) = {expr}  on [{a}, {b}] ===\n")
+
+    rows, root = bisection(f, a, b, tol=tol)
 
     print(f"{'iter':>4} {'a':>10} {'b':>10} {'c (mid)':>10} {'f(c)':>12}")
-    for i, a, b, c, fc in rows:
-        print(f"{i:>4} {a:>10.6f} {b:>10.6f} {c:>10.6f} {fc:>12.6f}")
+    for i, ai, bi, c, fc in rows:
+        print(f"{i:>4} {ai:>10.6f} {bi:>10.6f} {c:>10.6f} {fc:>12.6f}")
 
-    print(f"\nRoot approx {root:.6f} after {len(rows)} iterations (expected approx 1.3247)")
-    print(f"Notes formula estimate for 4 decimal places: n approx {iterations_needed(1, 2, 4):.2f} iterations")
+    print(f"\nRoot approx {root:.6f} after {len(rows)} iterations")
+    print(f"Notes formula estimate for 4 decimal places: n approx {iterations_needed(a, b, 4):.2f} iterations")

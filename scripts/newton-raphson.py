@@ -8,18 +8,22 @@ false position when the starting guess is reasonably close to the root
 every iteration).
 """
 
-
-def f(x):
-    return x ** 3 - x - 1
+import math
 
 
-def df(x):
-    # Derivative of x^3 - x - 1
-    return 3 * x ** 2 - 1
+def make_function(expr):
+    """Turns a typed expression like "x**3 - x - 1" into a callable f(x)."""
+    allowed_names = {k: v for k, v in math.__dict__.items() if not k.startswith("_")}
+
+    def f(x):
+        return eval(expr, {"__builtins__": {}}, {**allowed_names, "x": x})
+
+    return f
 
 
-def newton_raphson(x0, tol=1e-6, max_iter=100):
+def newton_raphson(f, df, x0, tol=1e-6, max_iter=100):
     """
+    f, df    : the function and its derivative, as callables f(x), df(x)
     x0       : initial guess
     tol      : stop once successive guesses differ by less than this
     max_iter : safety cap on iterations
@@ -48,12 +52,23 @@ def newton_raphson(x0, tol=1e-6, max_iter=100):
 
 
 if __name__ == "__main__":
-    print("=== Newton-Raphson: f(x) = x^3 - x - 1, x0 = 1.5 ===\n")
+    print("=== Newton-Raphson Method ===")
+    expr = input("Enter f(x), e.g. x**3 - x - 1 [Enter to use that example]: ").strip() or "x**3 - x - 1"
+    dexpr = input("Enter f'(x), e.g. 3*x**2 - 1 [Enter to use that example]: ").strip() or "3*x**2 - 1"
+    f = make_function(expr)
+    df = make_function(dexpr)
 
-    rows, root = newton_raphson(1.5)
+    x0_in = input("Enter initial guess x0 [Enter for 1.5]: ").strip()
+    x0 = float(x0_in) if x0_in else 1.5
+    tol_in = input("Enter tolerance [Enter for 1e-6]: ").strip()
+    tol = float(tol_in) if tol_in else 1e-6
+
+    print(f"\n=== Solving f(x) = {expr},  f'(x) = {dexpr},  x0 = {x0} ===\n")
+
+    rows, root = newton_raphson(f, df, x0, tol=tol)
 
     print(f"{'iter':>4} {'x_n':>10} {'f(x_n)':>12} {'df(x_n)':>12} {'x_n+1':>10}")
     for i, x, fx, dfx, x_new in rows:
         print(f"{i:>4} {x:>10.6f} {fx:>12.6f} {dfx:>12.6f} {x_new:>10.6f}")
 
-    print(f"\nRoot approx {root:.6f} after {len(rows)} iterations (expected approx 1.3247)")
+    print(f"\nRoot approx {root:.6f} after {len(rows)} iterations")

@@ -7,13 +7,22 @@ jumps to where that secant crosses zero. Slightly slower than
 Newton-Raphson but handy when f'(x) is hard or impossible to compute.
 """
 
-
-def f(x):
-    return x ** 3 - x - 1
+import math
 
 
-def secant(x0, x1, tol=1e-6, max_iter=100):
+def make_function(expr):
+    """Turns a typed expression like "x**3 - x - 1" into a callable f(x)."""
+    allowed_names = {k: v for k, v in math.__dict__.items() if not k.startswith("_")}
+
+    def f(x):
+        return eval(expr, {"__builtins__": {}}, {**allowed_names, "x": x})
+
+    return f
+
+
+def secant(f, x0, x1, tol=1e-6, max_iter=100):
     """
+    f        : the function to find a root of, as a callable f(x)
     x0, x1   : two initial guesses (don't need to bracket the root)
     tol      : stop once successive guesses differ by less than this
     max_iter : safety cap on iterations
@@ -43,12 +52,23 @@ def secant(x0, x1, tol=1e-6, max_iter=100):
 
 
 if __name__ == "__main__":
-    print("=== Secant Method: f(x) = x^3 - x - 1, x0=1, x1=2 ===\n")
+    print("=== Secant Method ===")
+    expr = input("Enter f(x), e.g. x**3 - x - 1 [Enter to use that example]: ").strip() or "x**3 - x - 1"
+    f = make_function(expr)
 
-    rows, root = secant(1, 2)
+    x0_in = input("Enter x0 [Enter for 1]: ").strip()
+    x0 = float(x0_in) if x0_in else 1.0
+    x1_in = input("Enter x1 [Enter for 2]: ").strip()
+    x1 = float(x1_in) if x1_in else 2.0
+    tol_in = input("Enter tolerance [Enter for 1e-6]: ").strip()
+    tol = float(tol_in) if tol_in else 1e-6
+
+    print(f"\n=== Solving f(x) = {expr},  x0 = {x0}, x1 = {x1} ===\n")
+
+    rows, root = secant(f, x0, x1, tol=tol)
 
     print(f"{'iter':>4} {'x_prev':>10} {'x_curr':>10} {'x_next':>10} {'f(x_curr)':>12}")
-    for i, x0, x1, x2, f1 in rows:
-        print(f"{i:>4} {x0:>10.6f} {x1:>10.6f} {x2:>10.6f} {f1:>12.6f}")
+    for i, xp, xc, xn, fc in rows:
+        print(f"{i:>4} {xp:>10.6f} {xc:>10.6f} {xn:>10.6f} {fc:>12.6f}")
 
-    print(f"\nRoot approx {root:.6f} after {len(rows)} iterations (expected approx 1.3247)")
+    print(f"\nRoot approx {root:.6f} after {len(rows)} iterations")

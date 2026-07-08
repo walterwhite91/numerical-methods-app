@@ -9,39 +9,26 @@ here with Cramer's rule, matching the notation used in class:
 f_0, g_0 for f(x0,y0), g(x0,y0), and determinants D, D1, D2.
 """
 
-
-def f(x, y):
-    # From the class example: y^2 - 5y + 4 = 0
-    return y ** 2 - 5 * y + 4
+import math
 
 
-def g(x, y):
-    # From the class example: 3x^2 y - 10x + 7 = 0
-    return 3 * x ** 2 * y - 10 * x + 7
+def make_function_xy(expr):
+    """Turns a typed expression in x and y into a callable f(x, y)."""
+    allowed_names = {k: v for k, v in math.__dict__.items() if not k.startswith("_")}
+
+    def f(x, y):
+        return eval(expr, {"__builtins__": {}}, {**allowed_names, "x": x, "y": y})
+
+    return f
 
 
-# Partial derivatives, worked out by hand ahead of time for this example.
-def f_x(x, y):
-    return 0.0
-
-
-def f_y(x, y):
-    return 2 * y - 5
-
-
-def g_x(x, y):
-    return 6 * x * y - 10
-
-
-def g_y(x, y):
-    return 3 * x ** 2
-
-
-def newton_system(x0, y0, tol=1e-6, max_iter=50):
+def newton_system(f, g, f_x, f_y, g_x, g_y, x0, y0, tol=1e-6, max_iter=50):
     """
-    x0, y0   : initial guess
-    tol      : stop once both corrections h and k are smaller than this
-    max_iter : safety cap on iterations
+    f, g               : the two equations, as callables f(x,y), g(x,y)
+    f_x, f_y, g_x, g_y : their partial derivatives, as callables (x,y) -> value
+    x0, y0             : initial guess
+    tol                : stop once both corrections h and k are smaller than this
+    max_iter           : safety cap on iterations
     """
     x, y = x0, y0
     rows = []
@@ -78,13 +65,34 @@ def newton_system(x0, y0, tol=1e-6, max_iter=50):
 
 
 if __name__ == "__main__":
-    print("=== Newton-Raphson for Systems: starting at (0, 0) ===\n")
+    print("=== Newton-Raphson for Systems ===")
+    print("Enter f(x,y), g(x,y) and their four partial derivatives (worked out by hand).")
+    f_expr = input("f(x,y), e.g. y**2 - 5*y + 4 [Enter to use that example]: ").strip() or "y**2 - 5*y + 4"
+    g_expr = input("g(x,y), e.g. 3*x**2*y - 10*x + 7 [Enter to use that example]: ").strip() \
+        or "3*x**2*y - 10*x + 7"
+    fx_expr = input("df/dx, e.g. 0 [Enter to use that example]: ").strip() or "0"
+    fy_expr = input("df/dy, e.g. 2*y - 5 [Enter to use that example]: ").strip() or "2*y - 5"
+    gx_expr = input("dg/dx, e.g. 6*x*y - 10 [Enter to use that example]: ").strip() or "6*x*y - 10"
+    gy_expr = input("dg/dy, e.g. 3*x**2 [Enter to use that example]: ").strip() or "3*x**2"
 
-    rows, x, y = newton_system(0, 0)
+    f = make_function_xy(f_expr)
+    g = make_function_xy(g_expr)
+    f_x = make_function_xy(fx_expr)
+    f_y = make_function_xy(fy_expr)
+    g_x = make_function_xy(gx_expr)
+    g_y = make_function_xy(gy_expr)
+
+    x0_in = input("Enter initial guess x0 [Enter for 0]: ").strip()
+    x0 = float(x0_in) if x0_in else 0.0
+    y0_in = input("Enter initial guess y0 [Enter for 0]: ").strip()
+    y0 = float(y0_in) if y0_in else 0.0
+
+    print(f"\n=== Solving f = {f_expr},  g = {g_expr},  starting at ({x0}, {y0}) ===\n")
+
+    rows, x, y = newton_system(f, g, f_x, f_y, g_x, g_y, x0, y0)
 
     print(f"{'iter':>4} {'x0':>8} {'y0':>8} {'h':>8} {'k':>8} {'x1':>8} {'y1':>8}")
-    for i, x0, y0, h, k, x1, y1 in rows:
-        print(f"{i:>4} {x0:>8.4f} {y0:>8.4f} {h:>8.4f} {k:>8.4f} {x1:>8.4f} {y1:>8.4f}")
+    for i, xa, ya, h, k, xb, yb in rows:
+        print(f"{i:>4} {xa:>8.4f} {ya:>8.4f} {h:>8.4f} {k:>8.4f} {xb:>8.4f} {yb:>8.4f}")
 
-    print(f"\nFirst step: h = {rows[0][3]:.1f}, k = {rows[0][4]:.1f} (matches notes: h=0.7, k=0.8)")
-    print(f"Converged to x approx {x:.4f}, y approx {y:.4f}")
+    print(f"\nConverged to x approx {x:.4f}, y approx {y:.4f}")

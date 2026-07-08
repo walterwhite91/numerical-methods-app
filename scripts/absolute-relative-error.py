@@ -23,14 +23,15 @@ def errors(X, X1):
 
 
 if __name__ == "__main__":
-    print("=== Absolute & Relative Error ===\n")
-
-    X = 3.141592   # true value
-    X1 = 3.14      # approximate value
+    print("=== Absolute & Relative Error ===")
+    X_in = input("Enter true value X [Enter for 3.141592]: ").strip()
+    X = float(X_in) if X_in else 3.141592
+    X1_in = input("Enter approximate value X1 [Enter for 3.14]: ").strip()
+    X1 = float(X1_in) if X1_in else 3.14
 
     E_A, E_R = errors(X, X1)
 
-    print(f"True value X = {X}")
+    print(f"\nTrue value X = {X}")
     print(f"Approximate value X1 = {X1}")
-    print(f"Absolute error E_A = X - X1 = {E_A:.6f} (expected: 0.001592)")
-    print(f"Relative error E_R = E_A / X = {E_R:.7f} (expected: approx 0.0005067)")
+    print(f"Absolute error E_A = X - X1 = {E_A:.6f}")
+    print(f"Relative error E_R = E_A / X = {E_R:.7f}")

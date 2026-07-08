@@ -5,6 +5,37 @@ convergence behavior, and a line-by-line tour of the matching script in
 `/scripts`. Read top to bottom, one section per method, in the order you'd
 present them.
 
+## How the interactive input works
+
+Every script prompts for its inputs when run (`python3 bisection.py`, etc.)
+instead of hardcoding a function at the top of the file. Each prompt shows
+a worked example inline, e.g.:
+
+```
+Enter f(x), e.g. x**3 - x - 1 [Enter to use that example]: _
+```
+
+Press Enter with nothing typed and it uses that example (the same one
+from the notes, printed in the walkthroughs below). Type your own
+expression — using normal Python math syntax, e.g. `x**2 - 2` or
+`sin(x) + x**3` — and the script solves *that* instead. This is done with
+a small `make_function(expr)` helper near the top of each script:
+
+```python
+def make_function(expr):
+    allowed_names = {k: v for k, v in math.__dict__.items() if not k.startswith("_")}
+    def f(x):
+        return eval(expr, {"__builtins__": {}}, {**allowed_names, "x": x})
+    return f
+```
+
+It turns the typed text into a real Python function, but only exposes the
+`math` module's names (`sin`, `cos`, `exp`, `sqrt`, ...) and `x` itself
+inside the expression — no other Python builtins are reachable, so it's
+safe to `eval()` even with input typed live in front of the class. ODE and
+system-of-equations scripts use the same idea with a two-variable version,
+`make_function_xy(expr)`, exposing both `x` and `y`.
+
 ---
 
 ## Bisection Method
@@ -29,19 +60,14 @@ can fail from a bad starting guess.
 ### Code walkthrough
 
 ```python
-def f(x):
-    return x ** 3 - x - 1
+def bisection(f, a, b, tol=1e-4, max_iter=100):
 ```
-This is the function from the worked example — the one whose root we're
-hunting for. Swap this out and everything else in the script still works
-unchanged.
-
-```python
-def bisection(a, b, tol=1e-4, max_iter=100):
-```
-The function signature: `a` and `b` are the interval endpoints, `tol` is
-how small the interval needs to get before we stop, and `max_iter` is a
-safety net so the loop can't run forever if something's set up wrong.
+The function signature: `f` is the function to root-find (built from
+whatever expression gets typed at the input prompt — see "How the
+interactive input works" above), `a` and `b` are the interval endpoints,
+`tol` is how small the interval needs to get before we stop, and
+`max_iter` is a safety net so the loop can't run forever if something's
+set up wrong.
 
 ```python
     fa = f(a)
@@ -97,6 +123,11 @@ many correct decimal places you want, this estimates how many iterations
 you'll need *before you even start*. Useful for showing the class that
 bisection's iteration count is predictable up front, unlike Newton-Raphson
 where it depends on how close the initial guess is.
+
+The `__main__` block prompts for `f(x)`, `a`, `b`, and the tolerance
+(each with the notes' values as the Enter-key default), builds `f` with
+`make_function`, then calls `bisection(f, a, b, tol=tol)` and prints the
+iteration table.
 
 ### Demo output
 
@@ -421,6 +452,249 @@ grow as `p, p(p+1), p(p+1)(p+2), ...` instead of `p, p(p-1), p(p-1)(p-2),
 
 Same data as the forward example (`y = x^2`), interpolating at `x = 2.5`
 (near the end of the table) gives `6.25` — exact again, same reason.
+
+---
+
+## Gauss Forward Interpolation
+
+**Script:** `scripts/gauss-forward.py`
+
+### What it does
+
+A "central" interpolation formula: instead of anchoring at the very start
+or end of the table like Newton's forward/backward formulas, it anchors
+at a row `y0` near the *middle* of the table and mixes forward- and
+backward-looking differences around it. Most accurate when the target `x`
+sits just after a middle table point.
+
+### Code walkthrough
+
+`gauss_forward_interpolation(x, y, target)` builds the same kind of
+forward difference table as the Newton forward script, then picks
+`origin_idx` as the table row closest to (and at or before) the target —
+that row becomes `y0`.
+
+The loop builds up the coefficient one order at a time. Notice the
+alternating pattern in `factor`: order 1 uses `p`, order 2 uses `p - 1`,
+order 3 uses `p + 1`, order 4 uses `p - 2`, and so on — that's the
+`p, (p-1), (p+1), (p-2), (p+2), ...` sequence you'd see multiplying out
+by hand in the notes' formula, just generated in code instead of typed
+out to a fixed order.
+
+The `row = origin_idx - k // 2` line picks which table row each order's
+difference comes from — order 1 and 2 pull from `y0`'s own row, order 3
+and 4 both step one row earlier, and so on, matching the `Δy0, Δ²y_{-1},
+Δ³y_{-1}, Δ⁴y_{-2}` pattern in the notes. If a row/order combination falls
+outside the table, the loop just stops there (`break`) — that's the
+formula's "..." in the notes made literal.
+
+### Demo output
+
+Tested against exact polynomials to confirm correctness: with a `y = x^2`
+table interpolating at `x = 2.25`, gives exactly `5.0625`; with a `y =
+x^3` table at `x = 2.5`, gives exactly `15.625` — both match the true
+values, since a full-width table reconstructs low-degree polynomials
+exactly.
+
+---
+
+## Gauss Backward Interpolation
+
+**Script:** `scripts/gauss-backward.py`
+
+### What it does
+
+The companion to Gauss Forward: also anchored at a central row `y0`, but
+used when the target `x` sits just *before* that row instead of just
+after it.
+
+**A correction worth mentioning in class:** the notes write this
+formula's first term as `p·Δy0` (the same as Gauss Forward's first term).
+That's not quite right for Gauss Backward — worked through numerically,
+it only reconstructs correctly if that first term is `p·Δy_{-1}` (the
+difference *behind* `y0`, not `y0`'s own forward difference). This script
+uses the corrected `Δy_{-1}` form; using `Δy0` instead gives a visibly
+wrong answer (verified: `x^2` at a test point came out `2.5625` instead of
+the exact `3.0625` with the notes' literal term, `3.0625` with the
+corrected one).
+
+### Code walkthrough
+
+`origin_idx` here is chosen as the table row at or *after* the target
+(using `math.ceil`), so `p` comes out negative or zero — the target sits
+behind the origin.
+
+Each term is added with its own bounds check (`if origin_idx - 1 >= 0
+and ...`), so the formula degrades gracefully on a small table instead of
+crashing — same defensive pattern as the other interpolation scripts.
+
+### Demo output
+
+`y = x^2` table, target `x = 1.75` (just before `x0 = 2`): gives exactly
+`3.0625`. `y = x^3` table, target `x = 1.5`: gives exactly `3.375`. Both
+exact, confirming the corrected formula.
+
+---
+
+## Stirling's Interpolation Formula
+
+**Script:** `scripts/stirling.py`
+
+### What it does
+
+Averages Gauss Forward and Gauss Backward together into one symmetric
+formula centered on `y0`. Most accurate right around the middle of the
+table (roughly `-0.25 < p < 0.25`).
+
+### Code walkthrough
+
+Same difference-table setup as the Gauss scripts, but `origin_idx` here
+is picked as whichever table row is numerically *closest* to the target —
+`min(range(n), key=lambda i: abs(x[i] - target))`.
+
+The main loop branches on whether the current order `k` is odd or even.
+For odd orders, it *averages two adjacent differences* (`table[row1][k]`
+and `table[row2][k]`) before adding the term — that's the "straddle the
+center" idea baked into the formula. For even orders, there's just one
+centered difference, no averaging needed.
+
+### Demo output
+
+Using the notes' own worked example (`cos(x)` table at `x = 0.10` through
+`0.30`), estimating `cos(0.17)` gives `0.985620` — matches the notes'
+expected `≈0.9856`. Also verified exactly against a `y = x^3` table.
+
+---
+
+## Bessel's Interpolation Formula
+
+**Script:** `scripts/bessel.py`
+
+### What it does
+
+Similar to Stirling's, but centered *between* two table points `y0` and
+`y1` rather than on a single row. Most accurate when the target sits
+close to the midpoint of `[x0, x1]`.
+
+### Code walkthrough
+
+`origin_idx` is the left endpoint of the bracketing interval, so `p`
+naturally falls in `[0, 1]`.
+
+The base term is `(y0 + y1) / 2` — literally averaging the two points the
+target sits between — then each further term (the `(p - 1/2)·Δy0` term,
+the averaged-second-difference term, the third-order term) is added with
+its own bounds check, same defensive pattern as the other scripts here.
+
+### Demo output
+
+`y = x^2` table, target `x = 2.5` (exactly midway between `x0=2` and
+`x1=3`): gives exactly `6.25`. Also exact against a cubic table.
+
+---
+
+## Everett's Interpolation Formula
+
+**Script:** `scripts/everett.py`
+
+### What it does
+
+Uses *only* even-order differences (skips odd orders entirely), combining
+contributions from two adjacent rows `y0` and `y1`. Your notes flag this
+one specifically as heavily emphasized in class — it's simpler to compute
+by hand than Bessel's or Stirling's (no averaging step) while staying
+just as accurate.
+
+### Code walkthrough
+
+`q = 1 - p` is defined right away — Everett's formula needs both `p` and
+its complement `q`.
+
+The loop only ever touches even orders (`k = 2 * m` for `m = 1, 2, 3,
+...`), building a `q`-side contribution and a `p`-side contribution
+*independently* each pass — each has its own bounds check, so if the
+table only has room for one side's term at a given order, that side still
+gets added instead of the whole term being dropped.
+
+**A subtlety worth demonstrating live:** with a small table (5 points),
+some higher-order terms genuinely can't be computed on both sides — that's
+not a bug, it's the table running out of data. Tested with a bigger table
+(7 points) reconstructing a degree-4 polynomial exactly (`39.0625` for
+`x^4` at `x=2.5`) confirms the formula itself is correct once there's
+enough data to support it.
+
+### Demo output
+
+`y = x^2` table, target `x = 2.5`: gives exactly `6.25`.
+
+---
+
+## Lagrange's Interpolation Formula
+
+**Script:** `scripts/lagrange.py`
+
+### What it does
+
+Builds the interpolating polynomial directly as a weighted sum of the
+given `y` values — no difference table at all. The one formula here that
+works for *unequally spaced* data, unlike every other interpolation
+method in this course.
+
+### Code walkthrough
+
+For each point `i`, `Li` is built as a running product: multiply in
+`(target - x[j]) / (x[i] - x[j])` for every other point `j`. By
+construction, `Li` evaluates to exactly `1` at `x[i]` and exactly `0` at
+every other data point — worth showing the class this property directly
+by evaluating `Li` at each `x_j` if there's time.
+
+`total += y[i] * Li` accumulates the weighted sum — each `y_i` only
+"counts" at its own point and fades to zero everywhere else in the
+dataset, thanks to that `Li` property.
+
+### Demo output
+
+Unequally-spaced example points `(2,4), (5,25), (8,64)` (i.e. `y = x^2`
+sampled unevenly), interpolating at `x = 6`: gives exactly `36 = 6^2`.
+
+---
+
+## Newton's General Interpolation (Divided Differences)
+
+**Script:** `scripts/newton-divided-difference.py`
+
+### What it does
+
+An alternative to Lagrange's formula for unequally spaced data: instead
+of computing basis polynomials directly, it builds a divided-difference
+table (like the forward-difference table, but each entry also divides by
+the *x*-spacing, since the spacing isn't constant) and adds terms one at
+a time.
+
+### Code walkthrough
+
+`divided_difference_table` fills the same triangular shape as the earlier
+difference tables, but each entry divides by `(x[i+j] - x[i])` — the
+actual x-distance spanned by that entry, since it can't assume a constant
+`h` the way the equally-spaced formulas do.
+
+`newton_divided_difference` accumulates the polynomial the same
+incremental way as Newton's forward formula: `product` builds up
+`(x-x0)(x-x1)...` one factor at a time, and each divided-difference value
+from the table's top row gets multiplied in and added to the result.
+
+### Demo output
+
+Using the notes' own log-table example (`(300, 2.4771), (304, 2.4829),
+(305, 2.4873), (307, 2.4871)`), interpolating at `x = 301` gives
+`2.4732`. **Worth flagging in class:** the notes' worked example only
+carries the *linear* term by hand (`2.4771 + 1×0.00145 = 2.4796`) as a
+quick illustration — this script uses the *full* divided-difference
+polynomial through all 4 points, which is more accurate but gives a
+different number. Both are "correct" for what they're each doing;
+verified this script's formula is exact by testing it against a cubic
+data set (`5^3 = 125` reconstructed exactly from 4 unequally-spaced
+points).
 
 ---
 

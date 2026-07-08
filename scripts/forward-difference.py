@@ -28,8 +28,8 @@ def newton_forward_interpolation(x, y, target):
     n = len(x)
     table = forward_difference_table(y)
 
-    h = x[1] - x[0]              # spacing between x values (assumed equal)
-    p = (target - x[0]) / h      # normalized distance from x0, in units of h
+    h = x[1] - x[0]          # spacing between x values (assumed equal)
+    p = (target - x[0]) / h  # normalized distance from x0, in units of h
 
     result = table[0][0]  # start with y0, the top-left entry
     p_term = 1.0           # builds up p * (p-1) * (p-2) * ...
@@ -44,16 +44,28 @@ def newton_forward_interpolation(x, y, target):
     return table, result
 
 
+def read_table():
+    n_in = input("Enter number of data points [Enter for the example x=[1,2,3], y=[1,4,9]]: ").strip()
+    if not n_in:
+        return [1.0, 2.0, 3.0], [1.0, 4.0, 9.0]
+
+    n = int(n_in)
+    x = [float(v) for v in input(f"Enter {n} x-values (space separated, equally spaced): ").strip().split()]
+    y = [float(v) for v in input(f"Enter {n} y-values (space separated): ").strip().split()]
+    return x, y
+
+
 if __name__ == "__main__":
-    print("=== Newton's Forward Interpolation: x = [1, 2, 3], y = [1, 4, 9] ===\n")
+    print("=== Newton's Forward Interpolation ===")
+    x_vals, y_vals = read_table()
 
-    x_vals = [1.0, 2.0, 3.0]
-    y_vals = [1.0, 4.0, 9.0]  # y = x^2
+    target_in = input("Enter target x to interpolate at [Enter for 1.5]: ").strip()
+    target = float(target_in) if target_in else 1.5
 
-    table, result = newton_forward_interpolation(x_vals, y_vals, 1.5)
+    table, result = newton_forward_interpolation(x_vals, y_vals, target)
 
-    print("Forward difference table:")
+    print("\nForward difference table:")
     for i, row in enumerate(table):
         print(f"  row {i} (x={x_vals[i]}): {[round(v, 4) for v in row[:len(table) - i]]}")
 
-    print(f"\nInterpolated y at x = 1.5: {result:.4f} (expected: 2.25)")
+    print(f"\nInterpolated y at x = {target}: {result:.4f}")
