@@ -26,6 +26,9 @@ export default function RootLayout({
           </aside>
           <main className="main-content">
             {children}
+            <footer className="site-footer">
+              built by <span>Mimansh Pokhrel</span>
+            </footer>
           </main>
         </div>
 

@@ -287,6 +287,21 @@ tr:hover td {
   font-size: 0.85rem;
 }
 
+/* Footer credit */
+.site-footer {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.site-footer span {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
 /* Floating GitHub button — fixed bottom-right, circular, all devices. */
 .github-fab {
   position: fixed;
