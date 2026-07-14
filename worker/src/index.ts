@@ -12,6 +12,8 @@ import { rungeKutta4 } from "./methods/rk4";
 import { numericalIntegrationTrapezoidal } from "./methods/trapezoidal";
 import { numericalIntegrationSimpson13 } from "./methods/simpson13";
 import { numericalIntegrationSimpson38 } from "./methods/simpson38";
+import { forwardDifferenceMethod, backwardDifferenceMethod } from "./methods/interpolation";
+import { buildRootGraph, buildOdeGraph, buildIntegrationGraph } from "./lib/graph";
 import { getAllQuestions, getChaptersSummary } from "./pastQna";
 import { extractSolverParams } from "./solverParamsExtractor";
 
@@ -47,67 +49,95 @@ interface IntegrationRequest {
   method: string;
 }
 
+function withGraph<T extends { success?: boolean }>(result: T, graph: unknown): T {
+  if (result.success && graph) (result as Record<string, unknown>).graph = graph;
+  return result;
+}
+
 app.post("/api/root-finding/bisection", async (c) => {
   const req = await c.req.json<RootRequest>();
-  return c.json(bisectionMethod(req.func_str, req.a!, req.b!, req.tol ?? 1e-6, req.max_iter ?? 100));
+  const result = bisectionMethod(req.func_str, req.a!, req.b!, req.tol ?? 1e-6, req.max_iter ?? 100);
+  return c.json(withGraph(result, buildRootGraph(req.func_str, result, "midpoint")));
 });
 
 app.post("/api/root-finding/secant", async (c) => {
   const req = await c.req.json<RootRequest>();
-  return c.json(secantMethod(req.func_str, req.x0!, req.x1!, req.tol ?? 1e-6, req.max_iter ?? 100));
+  const result = secantMethod(req.func_str, req.x0!, req.x1!, req.tol ?? 1e-6, req.max_iter ?? 100);
+  return c.json(withGraph(result, buildRootGraph(req.func_str, result, "x_new")));
 });
 
 app.post("/api/root-finding/false-position", async (c) => {
   const req = await c.req.json<RootRequest>();
-  return c.json(falsePositionMethod(req.func_str, req.a!, req.b!, req.tol ?? 1e-6, req.max_iter ?? 100));
+  const result = falsePositionMethod(req.func_str, req.a!, req.b!, req.tol ?? 1e-6, req.max_iter ?? 100);
+  return c.json(withGraph(result, buildRootGraph(req.func_str, result, "c")));
 });
 
 app.post("/api/root-finding/newton-raphson", async (c) => {
   const req = await c.req.json<RootRequest>();
-  return c.json(
-    newtonRaphsonMethod(req.func_str, req.deriv_str ?? "", req.x0!, req.tol ?? 1e-6, req.max_iter ?? 100)
-  );
+  const result = newtonRaphsonMethod(req.func_str, req.deriv_str ?? "", req.x0!, req.tol ?? 1e-6, req.max_iter ?? 100);
+  return c.json(withGraph(result, buildRootGraph(req.func_str, result, "x_new")));
 });
 
 app.post("/api/root-finding/generalized-newton", async (c) => {
   const req = await c.req.json<RootRequest>();
-  return c.json(
-    generalizedNewtonMethod(
-      req.func_str,
-      req.deriv_str ?? "",
-      req.x0!,
-      req.multiplicity ?? 1,
-      req.tol ?? 1e-6,
-      req.max_iter ?? 100
-    )
+  const result = generalizedNewtonMethod(
+    req.func_str,
+    req.deriv_str ?? "",
+    req.x0!,
+    req.multiplicity ?? 1,
+    req.tol ?? 1e-6,
+    req.max_iter ?? 100
   );
+  return c.json(withGraph(result, buildRootGraph(req.func_str, result, "x_new")));
 });
 
 app.post("/api/ode/euler", async (c) => {
   const req = await c.req.json<OdeRequest>();
-  return c.json(eulerMethod(req.func_str, req.x0, req.y0, req.h, req.steps_count));
+  const result = eulerMethod(req.func_str, req.x0, req.y0, req.h, req.steps_count);
+  return c.json(withGraph(result, buildOdeGraph(result)));
 });
 
 app.post("/api/ode/modified-euler", async (c) => {
   const req = await c.req.json<OdeRequest>();
-  return c.json(modifiedEulerMethod(req.func_str, req.x0, req.y0, req.h, req.steps_count));
+  const result = modifiedEulerMethod(req.func_str, req.x0, req.y0, req.h, req.steps_count);
+  return c.json(withGraph(result, buildOdeGraph(result)));
 });
 
 app.post("/api/ode/rk4", async (c) => {
   const req = await c.req.json<OdeRequest>();
-  return c.json(rungeKutta4(req.func_str, req.x0, req.y0, req.h, req.steps_count));
+  const result = rungeKutta4(req.func_str, req.x0, req.y0, req.h, req.steps_count);
+  return c.json(withGraph(result, buildOdeGraph(result)));
 });
 
 app.post("/api/integration", async (c) => {
   const req = await c.req.json<IntegrationRequest>();
+  let result;
   if (req.method === "trapezoidal") {
-    return c.json(numericalIntegrationTrapezoidal(req.func_str, req.a, req.b, req.n));
+    result = numericalIntegrationTrapezoidal(req.func_str, req.a, req.b, req.n);
   } else if (req.method === "simpson_13") {
-    return c.json(numericalIntegrationSimpson13(req.func_str, req.a, req.b, req.n));
+    result = numericalIntegrationSimpson13(req.func_str, req.a, req.b, req.n);
   } else if (req.method === "simpson_38") {
-    return c.json(numericalIntegrationSimpson38(req.func_str, req.a, req.b, req.n));
+    result = numericalIntegrationSimpson38(req.func_str, req.a, req.b, req.n);
+  } else {
+    return c.json({ success: false, message: "Unknown integration method" });
   }
-  return c.json({ success: false, message: "Unknown integration method" });
+  return c.json(withGraph(result, buildIntegrationGraph(req.func_str, result)));
+});
+
+interface InterpolationRequest {
+  x: number[];
+  y: number[];
+  xq: number;
+}
+
+app.post("/api/interpolation/forward-difference", async (c) => {
+  const req = await c.req.json<InterpolationRequest>();
+  return c.json(forwardDifferenceMethod(req.x, req.y, req.xq));
+});
+
+app.post("/api/interpolation/backward-difference", async (c) => {
+  const req = await c.req.json<InterpolationRequest>();
+  return c.json(backwardDifferenceMethod(req.x, req.y, req.xq));
 });
 
 // ─── Past Q&As ────────────────────────────────────────────────────────────────

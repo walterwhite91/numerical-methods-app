@@ -113,11 +113,6 @@ function QuestionCard({ q, index }: { q: PastQuestion; index: number }) {
   const [showAnswer, setShowAnswer] = useState(false);
   const [showGuided, setShowGuided] = useState(false);
 
-  // Deep link to solver passing qid so that solver fetches inputs
-  const solverUrl = q.solvable && q.solver_method
-    ? `/solver?method=${q.solver_method}&category=${q.solver_category}&qid=${q.id}`
-    : null;
-
   return (
     <div
       style={{
@@ -140,22 +135,6 @@ function QuestionCard({ q, index }: { q: PastQuestion; index: number }) {
           <MarksBadge marks={q.marks} />
           {q.sub_chapter && <SubChapterBadge text={q.sub_chapter} />}
         </div>
-        {solverUrl && (
-          <a
-            href={solverUrl}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '0.4rem',
-              padding: '0.4rem 0.85rem', borderRadius: '0.5rem', fontSize: '0.78rem',
-              fontWeight: 600, flexShrink: 0,
-              background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
-              color: 'white', textDecoration: 'none', transition: 'opacity 0.2s',
-            }}
-            onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
-            onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-          >
-            <Icons.Zap /> Solve
-          </a>
-        )}
       </div>
 
       {/* Question text */}

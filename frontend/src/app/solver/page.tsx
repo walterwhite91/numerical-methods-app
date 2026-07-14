@@ -3,8 +3,11 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import MathDisplay from '@/components/MathDisplay';
+import MethodGraph from '@/components/MethodGraph';
 
 const API_BASE = `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'}/api`;
+
+const INTERP_METHODS = ['forward-difference', 'backward-difference'];
 
 const DEFAULT_PARAMS = {
   func_str: 'x**3 - x - 1',
@@ -21,7 +24,58 @@ const DEFAULT_PARAMS = {
   n: 4,
   tol: 1e-6,
   max_iter: 50,
+  x_values: '1, 2, 3, 4, 5',
+  y_values: '1, 8, 27, 64, 125',
+  xq: 2.5,
 };
+
+// Unicode superscripts for difference-order headers (Δ², ∇³, …).
+const SUP = ['', '', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹', '¹⁰'];
+
+const fmtCell = (v: number) => Number(v.toFixed(4)).toString();
+
+// Staggered finite-difference table: each Δ^k y sits vertically centered
+// between the two entries it was computed from (classic diagonal layout).
+function DiagonalDiffTable({ x, table, direction }: {
+  x: number[]; table: number[][]; direction: string;
+}) {
+  const n = x.length;
+  const sym = direction === 'backward' ? '∇' : 'Δ';
+  const cols = n + 1;               // col 0 = x, cols 1..n = difference orders 0..n-1
+  const rows = 2 * n - 1;
+  const grid: (string | null)[][] = Array.from({ length: rows }, () => new Array(cols).fill(null));
+
+  for (let i = 0; i < n; i++) grid[2 * i][0] = fmtCell(x[i]);
+  for (let j = 0; j < n; j++) {
+    for (let i = 0; i < n - j; i++) {
+      grid[2 * i + j][j + 1] = fmtCell(table[i][j]);
+    }
+  }
+
+  const header = ['x', 'y'];
+  for (let k = 1; k < n; k++) header.push(`${sym}${SUP[k]}y`);
+
+  return (
+    <div className="table-container">
+      <table style={{ textAlign: 'center' }}>
+        <thead><tr>{header.map((h, i) => <th key={i} style={{ textAlign: 'center' }}>{h}</th>)}</tr></thead>
+        <tbody>
+          {grid.map((row, r) => (
+            <tr key={r}>
+              {row.map((cell, c) => (
+                <td key={c} style={{
+                  color: c >= 2 && cell !== null ? '#2563eb' : undefined,
+                  fontWeight: c >= 2 && cell !== null ? 600 : undefined,
+                  borderBottom: 'none',
+                }}>{cell ?? ''}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 function SolverContent() {
   const searchParams = useSearchParams();
@@ -107,7 +161,12 @@ function SolverContent() {
       return;
     }
 
-    if (['bisection', 'false-position'].includes(method)) {
+    if (INTERP_METHODS.includes(method)) {
+      const x = String(params.x_values).split(',').map(s => Number(s.trim())).filter(s => !Number.isNaN(s));
+      const y = String(params.y_values).split(',').map(s => Number(s.trim())).filter(s => !Number.isNaN(s));
+      url = `${API_BASE}/interpolation/${method}`;
+      payload = { x, y, xq: Number(params.xq) };
+    } else if (['bisection', 'false-position'].includes(method)) {
       url = `${API_BASE}/root-finding/${method}`;
       payload.a = Number(params.a);
       payload.b = Number(params.b);
@@ -206,16 +265,42 @@ function SolverContent() {
                   <option value="simpson-13">Simpson&apos;s 1/3 Rule</option>
                   <option value="simpson-38">Simpson&apos;s 3/8 Rule</option>
                 </optgroup>
+                <optgroup label="Interpolation">
+                  <option value="forward-difference">Newton&apos;s Forward Difference</option>
+                  <option value="backward-difference">Newton&apos;s Backward Difference</option>
+                </optgroup>
               </select>
             </div>
 
-            {method !== 'error-calculation' && (
+            {method !== 'error-calculation' && !INTERP_METHODS.includes(method) && (
               <div className="input-group">
                 <label className="input-label">Function f(x) or f(x, y)</label>
                 <input type="text" className="input-field" value={params.func_str}
                   onChange={e => handleInputChange('func_str', e.target.value)}
                   placeholder="e.g. x**3 - x - 1" required />
               </div>
+            )}
+
+            {INTERP_METHODS.includes(method) && (
+              <>
+                <div className="input-group">
+                  <label className="input-label">x values (comma-separated, equally spaced)</label>
+                  <input type="text" className="input-field" value={params.x_values}
+                    onChange={e => handleInputChange('x_values', e.target.value)}
+                    placeholder="e.g. 1, 2, 3, 4, 5" required />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">y values (comma-separated)</label>
+                  <input type="text" className="input-field" value={params.y_values}
+                    onChange={e => handleInputChange('y_values', e.target.value)}
+                    placeholder="e.g. 1, 8, 27, 64, 125" required />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">Interpolate at x =</label>
+                  <input type="number" step="any" className="input-field" value={params.xq}
+                    onChange={e => handleInputChange('xq', e.target.value)} required />
+                </div>
+              </>
             )}
 
             {method === 'error-calculation' && (
@@ -355,9 +440,10 @@ function SolverContent() {
               <div style={{ padding: '1.5rem', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 'var(--radius-lg)', marginBottom: '2rem' }}>
                 <h3 style={{ fontSize: '1rem', color: 'var(--accent-color)', marginBottom: '0.25rem' }}>Final Solution</h3>
                 <div style={{ fontSize: '1.75rem', fontWeight: '700', color: 'var(--primary-color)' }}>
-                  {result.root !== undefined ? `Root = ${result.root}` : null}
+                  {result.root !== undefined && result.root !== null ? `Root = ${result.root}` : null}
                   {result.integral !== undefined ? `Integral = ${result.integral}` : null}
                   {result.final_y !== undefined ? `y(${result.final_x}) = ${result.final_y}` : null}
+                  {result.interpolated_value !== undefined ? `y(${params.xq}) = ${Number(result.interpolated_value).toFixed(6)}` : null}
                   {result.error_results !== undefined ? (
                     <div style={{ fontSize: '1.25rem', lineHeight: '1.8' }}>
                       <div>Absolute Error: {result.error_results.absolute_error.toExponential(4)}</div>
@@ -368,6 +454,26 @@ function SolverContent() {
                 </div>
                 <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>{result.message}</p>
               </div>
+
+              {result.diff_table && result.x && (
+                <div style={{ marginBottom: '2rem' }}>
+                  <h3 style={{ fontSize: '1.25rem', marginBottom: '0.75rem' }}>Difference Table</h3>
+                  <DiagonalDiffTable x={result.x} table={result.diff_table} direction={result.direction} />
+                </div>
+              )}
+
+              {result.graph && (
+                <div style={{ marginBottom: '2rem' }}>
+                  <h3 style={{ fontSize: '1.25rem', marginBottom: '0.75rem' }}>Graphical Interpretation</h3>
+                  <MethodGraph graph={result.graph} />
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
+                    {result.graph.type === 'root' && 'Blue curve is f(x); the dashed green line marks the root, orange dots the successive iterate approximations.'}
+                    {result.graph.type === 'ode' && 'Blue markers trace the numerical solution y(x) step by step.'}
+                    {result.graph.type === 'integration' && 'Shaded strips are the area approximated under f(x).'}
+                    {result.graph.type === 'interp' && 'Blue dots are the data points, the curve is the interpolating polynomial, the red point is the interpolated value.'}
+                  </p>
+                </div>
+              )}
 
               {result.steps && result.steps.length > 0 && (
                 <div>
