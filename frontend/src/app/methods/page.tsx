@@ -7,6 +7,8 @@ import { methodCode } from '@/lib/methodCode.generated';
 import MathDisplay from '@/components/MathDisplay';
 import TextWithMath from '@/components/TextWithMath';
 import CodePreview from '@/components/CodePreview';
+import MethodGraph from '@/components/MethodGraph';
+import { getTheoryGraph, theoryGraphCaption } from '@/lib/theoryGraphs';
 
 function MethodExplorerContent() {
   const searchParams = useSearchParams();
@@ -29,6 +31,7 @@ function MethodExplorerContent() {
   }, [selectedCategory]);
 
   const method = methodsData[selectedMethod];
+  const theoryGraph = method ? getTheoryGraph(method.id, method.category) : null;
 
   return (
     <div className="two-col-grid" style={{ minHeight: '80vh' }}>
@@ -113,6 +116,16 @@ function MethodExplorerContent() {
                 ))}
               </ol>
             </div>
+
+            {theoryGraph && (
+              <div style={{ marginBottom: '2rem' }}>
+                <h2 style={{ fontSize: '1.5rem', marginBottom: '0.75rem' }}>Graphical Interpretation</h2>
+                <MethodGraph graph={theoryGraph} />
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+                  {theoryGraphCaption(theoryGraph.type, method.category)}
+                </p>
+              </div>
+            )}
 
             {methodCode[method.id] && (
               <div style={{ marginBottom: '2rem' }}>
