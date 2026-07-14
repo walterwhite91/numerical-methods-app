@@ -92,13 +92,15 @@ export default function CodePreview({ code }: { code: string }) {
 
   return (
     <div
+      className="code-block"
       style={{
         border: '1px solid var(--border-color)',
         borderRadius: 'var(--radius-lg)',
         backgroundColor: '#0f172a',
         overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch',
+        maxWidth: '100%',
         fontFamily: 'var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace)',
-        fontSize: '0.85rem',
         lineHeight: '1.5',
       }}
     >

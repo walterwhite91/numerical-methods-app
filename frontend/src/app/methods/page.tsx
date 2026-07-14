@@ -33,7 +33,7 @@ function MethodExplorerContent() {
   return (
     <div className="two-col-grid" style={{ minHeight: '80vh' }}>
       {/* Local Navigation sidebar */}
-      <aside style={{ borderRight: '1px solid var(--border-color)', paddingRight: '1.5rem' }}>
+      <aside style={{ borderRight: '1px solid var(--border-color)', paddingRight: '1.5rem', minWidth: 0 }}>
         <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', color: 'var(--primary-color)' }}>Categories</h2>
         <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '2rem' }}>
           {categories.map((cat) => (
@@ -88,7 +88,7 @@ function MethodExplorerContent() {
       </aside>
 
       {/* Concept details */}
-      <section style={{ paddingLeft: '1rem' }}>
+      <section style={{ paddingLeft: '1rem', minWidth: 0 }}>
         {method ? (
           <div>
             <h1 style={{ fontSize: '2.25rem', marginBottom: '1rem' }}>{method.name}</h1>
@@ -141,6 +141,8 @@ function MethodExplorerContent() {
                         fontFamily: 'var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace)',
                         fontSize: '0.85rem',
                         color: '#e2e8f0',
+                        overflowX: 'auto',
+                        maxWidth: '100%',
                       }}
                     >
                       {method.exampleInput.map((line, idx) => {
